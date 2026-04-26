@@ -117,7 +117,12 @@ async def upsert_profile(
     for h in payload.handles:
         session.add(ProfileHandle(profile_id=profile.id, **h.model_dump()))
     await session.commit()
-    await session.refresh(profile, attribute_names=["handles"])
+    # Refresh all server-default columns (created_at, updated_at) plus the
+    # handles relationship so response serialization doesn't trigger lazy I/O
+    # outside the async context.
+    await session.refresh(
+        profile, attribute_names=["created_at", "updated_at", "handles"]
+    )
     return profile
 
 

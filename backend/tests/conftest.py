@@ -8,10 +8,10 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from app import models as _models  # noqa: F401  — register all models on Base.metadata
 from app.ai.claude import ClaudeClient
 from app.db import Base
 from app.main import app
-import app.models  # noqa: F401  — register all models on Base.metadata
 
 
 @pytest.fixture

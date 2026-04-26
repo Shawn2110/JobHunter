@@ -32,7 +32,13 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
     # ── Database ────────────────────────────────────────────────────────────
-    database_url: str = "sqlite+aiosqlite:///./data/jobhunt.db"
+    # Default resolves to <repo_root>/data/jobhunt.db so the same URL works
+    # whether the process runs from the repo root, from backend/, or inside
+    # the Docker container. Override with DATABASE_URL in .env if you want
+    # the file elsewhere.
+    database_url: str = (
+        f"sqlite+aiosqlite:///{(REPO_ROOT / 'data' / 'jobhunt.db').as_posix()}"
+    )
 
     # ── AI provider (Anthropic Claude) ──────────────────────────────────────
     anthropic_api_key: str | None = None

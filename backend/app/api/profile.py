@@ -15,6 +15,7 @@ from app.ai.prompt_loader import PromptError, PromptLoader
 from app.db import get_session
 from app.deps import get_claude, get_prompt_loader, resume_storage_dir
 from app.models import Profile, ProfileHandle, Resume
+from app.services.handles import refresh_handle
 from app.services.resume_parser import ResumeParseError, parse_resume
 
 log = structlog.get_logger("app.api.profile")
@@ -215,3 +216,17 @@ async def upload_resume(
         chars=len(raw_text),
     )
     return resume
+
+
+@router.post("/handles/{handle_id}/refresh", response_model=ProfileHandleOut)
+async def refresh_profile_handle(
+    handle_id: int,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> ProfileHandle:
+    handle = await session.get(ProfileHandle, handle_id)
+    if handle is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Handle not found"
+        )
+    await refresh_handle(handle, session=session)
+    return handle

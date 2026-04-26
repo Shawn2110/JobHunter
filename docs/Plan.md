@@ -22,9 +22,9 @@ Phases run sequentially; tasks within a phase can run in parallel where noted. E
 ## 2. Current Status
 
 ```
-Phase: 1 (Profile & Resume Parsing)
-Active task: P1-T1 (profile data model + migrations)
-Completed:   Phase 0 — P0-T1, P0-T2, P0-T3, P0-T4, P0-T5
+Phase: 2 (Discovery — Mode 1: Aggregators)
+Active task: P2-T1 (job data model)
+Completed:   Phase 0 (P0-T1..T5), Phase 1 (P1-T1..T4)
 Last updated: 2026-04-26
 ```
 

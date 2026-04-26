@@ -5,6 +5,23 @@ One-line entries per task completion, newest first. Per
 
 ## 2026-04-26
 
+- **Phase 1 complete.** Active task: P2-T1 (job data model). 41 backend tests
+  passing.
+- P1-T4 — Handle signal cache: `app/services/handles.py` with per-kind
+  fetchers (GitHub REST, LeetCode GraphQL, Kaggle URL verify, LinkedIn
+  stub, portfolio HEAD), `refresh_handle()` dispatcher, and POST
+  `/profile/handles/{id}/refresh` endpoint. 6 tests including a
+  no-LinkedIn-requests guard.
+- P1-T3 — Profile UI: `/profile` page with full-form editor (basics,
+  handles, about-me, compensation), Button/Input/Textarea/Label primitives,
+  and resume upload form that surfaces parsed JSON inline.
+- P1-T2 — Resume upload + parsing: `Resume` model + migration,
+  `prompts/static/parse_resume.md` (strict JSON schema, no fabrication),
+  `app/services/resume_parser.py` (PDF + DOCX extraction via pypdf +
+  docx2txt), `POST /profile/resume` endpoint. 5 service tests + 5 API tests.
+- P1-T1 — Profile data model: `Profile` + `ProfileHandle` SQLAlchemy
+  models, Alembic migration, 4 model tests (insert, relationship, unique
+  constraint, cascade delete).
 - **Phase 0 complete.** Active task: P1-T1 (profile data model + migrations).
 - P0-T5 — Claude wrapper: `ClaudeClient` with model selection (Sonnet 4.6
   default, Opus 4.7 high-stakes), `complete()` and `complete_json()`

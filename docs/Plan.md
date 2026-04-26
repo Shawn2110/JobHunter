@@ -23,7 +23,8 @@ Phases run sequentially; tasks within a phase can run in parallel where noted. E
 
 ```
 Phase: 0 (Pre-flight)
-Active task: P0-T1 (repository scaffold)
+Active task: P0-T4 (prompt loading framework)
+Completed:   P0-T1, P0-T2, P0-T3
 Last updated: 2026-04-26
 ```
 

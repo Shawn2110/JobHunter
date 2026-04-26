@@ -1,0 +1,69 @@
+# ─── Secrets ─────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ─── Local data (never commit) ───────────────────────────
+data/*
+!data/.gitkeep
+
+# ─── Python ──────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ─── uv ──────────────────────────────────────────────────
+uv.lock
+
+# ─── Node / Next.js ──────────────────────────────────────
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+.pnp
+.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ─── Browser extension build ─────────────────────────────
+extension/dist/
+extension/*.zip
+
+# ─── Editors / IDEs ──────────────────────────────────────
+.vscode/
+!.vscode/settings.json.example
+.idea/
+*.swp
+*.swo
+
+# ─── OS ──────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Generated artifacts (kept out of git, lives in data/) ──
+*.docx.tmp
+*.pdf.tmp

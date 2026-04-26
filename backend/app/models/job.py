@@ -45,6 +45,7 @@ class Job(Base):
     ats_family: Mapped[str | None] = mapped_column(String(32))
 
     embedding_id: Mapped[str | None] = mapped_column(String(64))
+    embedding_vector: Mapped[list[float] | None] = mapped_column(JSON)
 
     first_seen_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

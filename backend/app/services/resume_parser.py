@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import io
+import tempfile
 from pathlib import Path
 from typing import Any
 
+import docx2txt
 import structlog
-from docx import Document
 from pypdf import PdfReader
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -62,15 +63,15 @@ def _extract_pdf(content: bytes) -> str:
 
 
 def _extract_docx(content: bytes) -> str:
-    doc = Document(io.BytesIO(content))
-    parts = [p.text for p in doc.paragraphs if p.text.strip()]
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                t = cell.text.strip()
-                if t:
-                    parts.append(t)
-    return "\n".join(parts).strip()
+    # docx2txt expects a path or file-like object on disk.
+    with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp:
+        tmp.write(content)
+        tmp_path = Path(tmp.name)
+    try:
+        text = docx2txt.process(str(tmp_path)) or ""
+    finally:
+        tmp_path.unlink(missing_ok=True)
+    return text.strip()
 
 
 async def parse_resume(

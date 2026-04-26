@@ -105,3 +105,67 @@ export async function uploadResume(file: File): Promise<ResumeOut> {
   }
   return res.json() as Promise<ResumeOut>;
 }
+
+// ─── Search & jobs ────────────────────────────────────────────────────────
+
+export interface SearchInput {
+  role: string;
+  domain?: string | null;
+  locations?: string[];
+  work_mode?: "remote" | "hybrid" | "onsite" | "any" | null;
+  salary_floor?: number | null;
+  page?: number;
+  per_page?: number;
+}
+
+export interface JobSourceOut {
+  source_kind: string;
+  source_provider: string;
+  source_url: string;
+}
+
+export interface JobOut {
+  id: number;
+  title: string;
+  company: string;
+  company_canonical: string;
+  location: string | null;
+  work_mode: string | null;
+  salary_text: string | null;
+  description_md: string | null;
+  posted_at: string | null;
+  apply_url: string | null;
+  ats_family: string | null;
+  first_seen_at: string;
+  last_seen_at: string;
+  sources: JobSourceOut[];
+}
+
+export interface SearchResponse {
+  new_count: number;
+  updated_count: number;
+  jobs: JobOut[];
+}
+
+export async function searchJobs(input: SearchInput): Promise<SearchResponse> {
+  const res = await fetch(`${API_BASE}/search`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    throw new Error(`POST /search returned ${res.status}: ${await res.text()}`);
+  }
+  return res.json() as Promise<SearchResponse>;
+}
+
+export async function listJobs(
+  limit = 50,
+  offset = 0,
+): Promise<JobOut[]> {
+  return getJson<JobOut[]>(`/jobs?limit=${limit}&offset=${offset}`);
+}
+
+export async function getJobDetail(id: number): Promise<JobOut> {
+  return getJson<JobOut>(`/jobs/${id}`);
+}

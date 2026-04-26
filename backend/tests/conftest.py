@@ -42,6 +42,36 @@ async def client() -> AsyncClient:
         yield c
 
 
+@pytest.fixture
+async def api_client(
+    db_session: AsyncSession,
+    frozen_claude: ClaudeClient,
+) -> AsyncIterator[AsyncClient]:
+    """ASGI client with get_session and get_claude dependencies overridden.
+
+    Routes that touch the DB use the in-memory db_session; routes that
+    call Claude use the frozen fake. Cleans up dependency_overrides on
+    teardown so tests don't leak state into each other.
+    """
+    from app.db import get_session
+    from app.deps import get_claude
+
+    async def _get_session_override() -> AsyncIterator[AsyncSession]:
+        yield db_session
+
+    def _get_claude_override() -> ClaudeClient:
+        return frozen_claude
+
+    app.dependency_overrides[get_session] = _get_session_override
+    app.dependency_overrides[get_claude] = _get_claude_override
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as c:
+            yield c
+    finally:
+        app.dependency_overrides.clear()
+
+
 class _FakeMessages:
     """Stand-in for `AsyncAnthropic.messages` used by frozen_claude.
 

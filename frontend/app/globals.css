@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    /* Design.md § 5.2 — warm off-white, not pure white */
+    background-color: #fafaf9;
+    color: #0a0a0a;
+  }
+}

@@ -1,0 +1,63 @@
+# JobHunt — local-first Docker Compose
+#
+# Three services: backend (FastAPI), frontend (Next.js), worker (background
+# jobs). All bind to localhost by default. For VPS deployment behind
+# Cloudflare Tunnel, set BIND_PUBLIC=1 in .env and follow docs/Architecture.md
+# § 12.
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: jobhunt-backend
+    env_file: .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "${BACKEND_HOST:-127.0.0.1}:${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ./backend:/app
+      - ./prompts:/app/prompts:ro
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: jobhunt-frontend
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Worker reuses the backend image; Phase 9 wires up nightly jobs.
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: jobhunt-worker
+    env_file: .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend:/app
+      - ./prompts:/app/prompts:ro
+      - ./data:/app/data
+    command: ["python", "-m", "app.workers.runner"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped

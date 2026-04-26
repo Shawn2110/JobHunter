@@ -1,13 +1,34 @@
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from types import SimpleNamespace
 from typing import Any
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.ai.claude import ClaudeClient
+from app.db import Base
 from app.main import app
+import app.models  # noqa: F401  — register all models on Base.metadata
+
+
+@pytest.fixture
+async def db_session() -> AsyncIterator[AsyncSession]:
+    """Per-test in-memory SQLite session.
+
+    Creates all tables fresh, yields one session, drops everything on
+    teardown. Tests that need persistence across calls within one
+    test should use this single session for all reads and writes.
+    """
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:", future=True)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    sessionmaker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with sessionmaker() as session:
+        yield session
+    await engine.dispose()
 
 
 @pytest.fixture

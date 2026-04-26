@@ -59,6 +59,9 @@ extension/*.zip
 *.swp
 *.swo
 
+# ─── Claude Code local state ─────────────────────────────
+.claude/
+
 # ─── OS ──────────────────────────────────────────────────
 .DS_Store
 Thumbs.db

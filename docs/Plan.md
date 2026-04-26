@@ -22,9 +22,9 @@ Phases run sequentially; tasks within a phase can run in parallel where noted. E
 ## 2. Current Status
 
 ```
-Phase: 2 (Discovery — Mode 1: Aggregators)
-Active task: P2-T1 (job data model)
-Completed:   Phase 0 (P0-T1..T5), Phase 1 (P1-T1..T4)
+Phase: 3 (Local Index & Fit Assessment)
+Active task: P3-T1 (embeddings & vector index)
+Completed:   Phase 0 (P0-T1..T5), Phase 1 (P1-T1..T4), Phase 2 (P2-T1..T4)
 Last updated: 2026-04-26
 ```
 

@@ -5,6 +5,20 @@ One-line entries per task completion, newest first. Per
 
 ## 2026-04-26
 
+- **Phase 2 complete.** Active task: P3-T1 (embeddings + vector index). 72
+  backend tests passing.
+- P2-T4 — Search UI: `/search` page (sticky form left, results right) + Nav
+  in root layout. JobCards render title, location/mode/salary/ATS chips,
+  source provider badges.
+- P2-T3 — Discovery orchestrator + dedupe: `run_discovery` runs adapters
+  in parallel, dedupes within batch, then matches against existing DB rows
+  via canonical_company + normalized_title + description Levenshtein. ATS
+  family detected from apply URL. POST /search, GET /jobs, GET /jobs/{id}
+  endpoints. 23 tests.
+- P2-T2 — Aggregator adapters: JSearch, Adzuna, Jooble + base
+  DiscoveryAdapter ABC. Each adapter self-skips when not configured;
+  errors are caught and logged without breaking the orchestrator.
+- P2-T1 — Job, JobSource, SearchQuery models + migration.
 - **Phase 1 complete.** Active task: P2-T1 (job data model). 41 backend tests
   passing.
 - P1-T4 — Handle signal cache: `app/services/handles.py` with per-kind

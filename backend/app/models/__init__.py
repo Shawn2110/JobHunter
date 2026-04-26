@@ -1,1 +1,9 @@
-"""SQLAlchemy ORM models. Models are added per-table in Phase 1+ tasks."""
+"""SQLAlchemy ORM models.
+
+Every model module must be imported here so its table is registered on
+`Base.metadata` for Alembic autogenerate to see it.
+"""
+
+from app.models.ai_call import AiCall
+
+__all__ = ["AiCall"]

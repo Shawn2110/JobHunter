@@ -2,6 +2,7 @@
 
 import { useState, type ChangeEvent, type FormEvent } from "react";
 
+import { JobCard } from "@/components/feed/JobCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -159,41 +160,3 @@ export default function SearchPage() {
   );
 }
 
-function JobCard({ job }: { job: JobOut }) {
-  return (
-    <li className="rounded-lg border border-neutral-200 bg-white p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <h3 className="text-base font-medium leading-tight">
-            {job.apply_url ? (
-              <a
-                href={job.apply_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:underline"
-              >
-                {job.title}
-              </a>
-            ) : (
-              job.title
-            )}
-          </h3>
-          <p className="text-sm text-neutral-600">{job.company}</p>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-            {job.location && <span>{job.location}</span>}
-            {job.work_mode && <span>· {job.work_mode}</span>}
-            {job.salary_text && <span>· {job.salary_text}</span>}
-            {job.ats_family && <span>· {job.ats_family}</span>}
-          </div>
-        </div>
-        <div className="flex flex-shrink-0 flex-col items-end gap-1">
-          {job.sources.map((s, i) => (
-            <Badge key={i} variant="secondary" className="text-[10px]">
-              {s.source_provider}
-            </Badge>
-          ))}
-        </div>
-      </div>
-    </li>
-  );
-}

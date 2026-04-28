@@ -124,6 +124,32 @@ export interface JobSourceOut {
   source_url: string;
 }
 
+export type FitVerdict = "strong" | "good" | "stretch" | "below" | "mismatch";
+
+export interface KnockoutRisk {
+  question: string;
+  criterion: string;
+  user_status: string;
+  can_pass: "yes" | "no" | "maybe";
+}
+
+export interface SkillsMatch {
+  present: string[];
+  missing: string[];
+  score_required?: string | null;
+}
+
+export interface FitAssessmentOut {
+  verdict: FitVerdict;
+  summary_md: string | null;
+  skills_match_json: SkillsMatch | null;
+  experience_verdict: string | null;
+  domain_match: string | null;
+  evidence_strength: string | null;
+  knockout_risks_json: KnockoutRisk[] | null;
+  computed_at: string;
+}
+
 export interface JobOut {
   id: number;
   title: string;
@@ -139,6 +165,7 @@ export interface JobOut {
   first_seen_at: string;
   last_seen_at: string;
   sources: JobSourceOut[];
+  fit_assessment: FitAssessmentOut | null;
 }
 
 export interface SearchResponse {

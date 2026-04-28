@@ -50,4 +50,4 @@ class FitAssessment(Base):
         nullable=False,
     )
 
-    job = relationship("Job")
+    job = relationship("Job", back_populates="fit_assessment")

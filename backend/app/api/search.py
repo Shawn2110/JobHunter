@@ -23,6 +23,17 @@ class JobSourceOut(BaseModel):
     source_url: str
 
 
+class FitAssessmentOut(BaseModel):
+    verdict: str
+    summary_md: str | None
+    skills_match_json: dict[str, Any] | None
+    experience_verdict: str | None
+    domain_match: str | None
+    evidence_strength: str | None
+    knockout_risks_json: list[dict[str, Any]] | None
+    computed_at: datetime
+
+
 class JobOut(BaseModel):
     id: int
     title: str
@@ -38,6 +49,7 @@ class JobOut(BaseModel):
     first_seen_at: datetime
     last_seen_at: datetime
     sources: list[JobSourceOut]
+    fit_assessment: FitAssessmentOut | None = None
 
 
 class SearchResponse(BaseModel):

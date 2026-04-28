@@ -63,6 +63,13 @@ class Job(Base):
     sources: Mapped[list[JobSource]] = relationship(
         back_populates="job", cascade="all, delete-orphan", lazy="selectin"
     )
+    fit_assessment: Mapped["FitAssessment | None"] = relationship(  # type: ignore[name-defined]  # noqa: F821
+        "FitAssessment",
+        uselist=False,
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        back_populates="job",
+    )
 
 
 class JobSource(Base):

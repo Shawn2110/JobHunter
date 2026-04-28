@@ -3,6 +3,30 @@
 One-line entries per task completion, newest first. Per
 [docs/Agent.md](Agent.md) and [docs/Plan.md](Plan.md) § 7.
 
+## 2026-04-28
+
+- **Phase 3 complete.** Active task: P3.5-T1 (trust data model). 90 backend
+  tests passing.
+- P3-T5 — Feed UI with verdicts: FitBadge (5 color-paired-with-text
+  verdicts per Design.md § 5.2), JobCard extracted to
+  components/feed/, /jobs/[id] detail page (3-column: summary +
+  description + actions), knockout pills on cards.
+- P3-T4 — Stateful diff: services/diff.py + saved-search endpoints
+  (POST /search/saved, GET /search/saved, POST /search/saved/{id}/run).
+  First run treats all jobs as new; subsequent runs use first_seen_at
+  windowing against last_run_at. 2 tests.
+- P3-T3 — Knockout extraction: prompts/static/extract_knockouts.md
+  (8 category hints, conservative on soft skills) + ai/knockouts.py.
+  2 tests.
+- P3-T2 — Fit assessment: FitAssessment model + migration,
+  prompts/meta/fit_assessment_brief.md (honesty-over-flattery: flags
+  stretch/below verdicts and surfaces knockouts), ai/fit.py with
+  upsert-on-job_id. 2 tests.
+- P3-T1 — Indexing: HashEmbedder (384-dim character-3-gram, NOT
+  semantic — placeholder until sentence-transformers is wired in),
+  index/service.py with embed_job/reindex_pending/search_similar,
+  Job.embedding_vector column + migration. 8 tests.
+
 ## 2026-04-26
 
 - **Phase 2 complete.** Active task: P3-T1 (embeddings + vector index). 72

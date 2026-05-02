@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>JobHunt</title>
+    <style>
+      body {
+        font: 13px system-ui;
+        margin: 0;
+        padding: 14px;
+        width: 260px;
+        color: #0a0a0a;
+        background: #fafaf9;
+      }
+      h1 {
+        font-size: 14px;
+        margin: 0 0 6px;
+      }
+      p {
+        margin: 0 0 10px;
+        color: #525252;
+      }
+      button {
+        width: 100%;
+        background: #0f766e;
+        color: #fff;
+        border: 0;
+        padding: 8px 10px;
+        border-radius: 6px;
+        font: 13px system-ui;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #fff;
+        color: #0a0a0a;
+        border: 1px solid #e5e5e5;
+        margin-top: 6px;
+      }
+      .status {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #525252;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>JobHunt</h1>
+    <p>Save this page to your local JobHunt index. Never auto-submits.</p>
+    <button id="save">Save job to JobHunt</button>
+    <button id="open" class="secondary">Open JobHunt</button>
+    <div id="status" class="status"></div>
+    <script src="popup.js"></script>
+  </body>
+</html>

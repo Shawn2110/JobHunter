@@ -9,6 +9,7 @@ from app.models.fit import FitAssessment
 from app.models.job import Job, JobSource, SearchQuery
 from app.models.profile import Profile, ProfileHandle
 from app.models.resume import Resume
+from app.models.tailoring import TailoredArtifact, TailoringBrief
 from app.models.trust import JobRepostHistory, TrustAssessment
 
 __all__ = [
@@ -21,5 +22,7 @@ __all__ = [
     "ProfileHandle",
     "Resume",
     "SearchQuery",
+    "TailoredArtifact",
+    "TailoringBrief",
     "TrustAssessment",
 ]

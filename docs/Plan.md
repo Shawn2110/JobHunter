@@ -22,11 +22,15 @@ Phases run sequentially; tasks within a phase can run in parallel where noted. E
 ## 2. Current Status
 
 ```
-Phase: 5 (Application Packaging)
-Active task: P5-T1 (cover-letter prompts)
-Completed:   Phase 0–3.5, Phase 4 (P4-T1..T3, T5 backend)
-Deferred:    P4-T4 (DOCX/PDF render — python-docx blocked locally,
-             Markdown render lands instead), P4-T5 frontend UI
+Phase: 10 (Polish — backend complete; some UI + DOCX deferred)
+Completed:   Phases 0, 1, 2, 3, 3.5, 4 (backend), 5 (backend + ext),
+             6 (backend), 7 (backend), 8, 9, 10 (admin + critical tests + docs)
+Deferred:    P3-T1 sentence-transformers swap (HashEmbedder ships),
+             P4-T4 DOCX/PDF render (Markdown ships; lxml blocked locally),
+             frontend pages for tailoring/contacts/outreach/watchlist/
+             applications/cost-dashboard, Twitter/Wellfound/Cutshort/
+             Hasjob adapters, Firecrawl backend.
+             See docs/decisions/0004-shipping-cuts-and-deferred-work.md.
 Last updated: 2026-05-02
 ```
 

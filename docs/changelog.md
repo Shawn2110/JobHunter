@@ -5,6 +5,50 @@ One-line entries per task completion, newest first. Per
 
 ## 2026-05-02
 
+- **Backend pipeline complete across all 11 phases. 134 backend tests passing.**
+  Deferred surface documented in docs/decisions/0004-shipping-cuts-and-deferred-work.md.
+- P10 — Polish: /admin/export (every user-data table → JSON),
+  /admin/wipe (typed "WIPE" confirmation, deletes rows + binary
+  artifacts under data/). Critical Do-Not-Break tests:
+  test_keys_never_logged.py (greps log capture for sensitive
+  substrings + asserts /providers returns no long strings),
+  test_localhost_only.py (Settings binds to 127.0.0.1 by default,
+  0.0.0.0 only when BIND_PUBLIC=1). docs/SETUP.md +
+  docs/DEPLOYMENT.md (3 paths: local-only, Oracle Free Tier +
+  Cloudflare Tunnel + Access, Hetzner + Coolify) +
+  docs/decisions/0004-shipping-cuts-and-deferred-work.md.
+- P9 — Watchlist + nightly scheduler: WatchlistCompany model,
+  APScheduler AsyncIOScheduler firing crawl_watchlist at 03:00 local,
+  /watchlist endpoints + /watchlist/run-now manual trigger, worker
+  runner for the docker-compose 'worker' service.
+- P8 — Discovery Modes 2 + 3: RedditAdapter (public JSON API, hiring-
+  post filter), CareersPageAdapter (httpx + JobPosting JSON-LD,
+  per-domain rate limit at 1 req / 5s), selectors.yaml for fallback
+  CSS selectors, adapters_for_modes() router on the orchestrator.
+- P7 — Outreach drafting: OutreachDraft model, prompts/meta/
+  outreach_brief.md (intent-branched: referral / application_support /
+  cold_intro), prompts/execution/outreach_draft.md (no greeting, no
+  signature, hard-enforced forbidden phrases), prompts/execution/
+  humanize.md (optional AI-tells removal pass), full /outreach API
+  including mark-sent for the user's manual-send signal.
+- P6 — Contact discovery: Contact model (no verified-email field —
+  emails are opportunistic-only with email_source labels),
+  enrichment/linkedin_url.py (Brave preferred, Serper fallback,
+  site:linkedin.com/in URLs only — never fetches LinkedIn),
+  enrichment/signal.py (public-page aggregation + email extraction),
+  /contacts/discover. Critical test_no_linkedin.py asserts no
+  LinkedIn page fetches anywhere in backend + no linkedin*.py adapter
+  file exists.
+- P5 — Application packaging: cover-letter meta + execution prompts
+  (forbidden-phrase enforcement), 5 custom-question prompts
+  (why_this_company / why_this_role / why_leaving / biggest_project /
+  salary_expectations), services/custom_questions.py dispatcher,
+  Browser Extension MV3 (manifest, background, content with autofill +
+  no-submit guard, popup with save-job + open-app), /extension API
+  for application-package + save-job. Critical
+  test_no_autosubmit.py greps for any submit-trigger pattern in the
+  extension JS (after stripping comments) and asserts only
+  localhost:8000 / 127.0.0.1:8000 are reachable.
 - **Phase 4 backend complete** (T4 DOCX render + T5 frontend UI deferred).
   Active task: P5-T1. 119 backend tests passing.
 - P4 — Resume tailoring: Layer-1 meta-prompt + Layer-2 execution prompt

@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.api import (
+    admin,
     contacts,
     extension,
     health,
@@ -98,3 +99,4 @@ app.include_router(extension.router)
 app.include_router(contacts.router)
 app.include_router(outreach.router)
 app.include_router(watchlist.router)
+app.include_router(admin.router)

@@ -1,0 +1,138 @@
+# JobHunt trust rules — Layer A (static, no-AI scam + ghost-job patterns).
+# Each rule is regex-based against the job description (case-insensitive).
+# severity: info | warning | scam_strong
+# applies_to: india | us | global
+# Edit freely — the loader picks up changes on the next ingest.
+
+rules:
+  # ── Payment-request rules (always scam_strong) ────────────────────────────
+  - id: payment_registration_fee
+    severity: scam_strong
+    pattern: "(?:registration|application|enrollment)\\s+fee"
+    description: "Asks for a registration / application fee"
+    applies_to: global
+
+  - id: payment_training_fee
+    severity: scam_strong
+    pattern: "training\\s+fee|pay\\s+for\\s+training"
+    description: "Asks the candidate to pay for training"
+    applies_to: global
+
+  - id: payment_laptop_deposit
+    severity: scam_strong
+    pattern: "(?:laptop|equipment)\\s+(?:deposit|fee)"
+    description: "Asks for a laptop / equipment deposit"
+    applies_to: global
+
+  - id: payment_security_deposit
+    severity: scam_strong
+    pattern: "security\\s+deposit|refundable\\s+deposit"
+    description: "Asks for a security or 'refundable' deposit"
+    applies_to: global
+
+  - id: payment_id_card_fee
+    severity: scam_strong
+    pattern: "id\\s+card\\s+fee|id-card\\s+fee"
+    description: "Asks for an ID card fee"
+    applies_to: global
+
+  - id: payment_background_check_fee
+    severity: scam_strong
+    pattern: "background\\s+(?:verification|check)\\s+fee"
+    description: "Asks the candidate to pay for background verification"
+    applies_to: global
+
+  # ── Indian-specific scam patterns ─────────────────────────────────────────
+  - id: india_naukri_penalty
+    severity: scam_strong
+    pattern: "naukri.*penalty|penalty.*naukri|fine.*ignored.*email"
+    description: "Naukri 'penalty' / fine claim — known fraud pattern (UP Police, 2025)"
+    applies_to: india
+
+  - id: india_govt_impersonation
+    severity: scam_strong
+    pattern: "(?:government|govt)\\s+(?:job|recruitment).*(?:fee|deposit|payment)"
+    description: "Government-job pattern with payment ask (real govt jobs never charge)"
+    applies_to: india
+
+  - id: india_international_placement_fee
+    severity: warning
+    pattern: "international\\s+placement.*(?:fee|deposit|charge)"
+    description: "International placement with fees — common India scam"
+    applies_to: india
+
+  # ── Document / OTP requests (pre-offer, always scam_strong) ───────────────
+  - id: document_aadhaar_pre_offer
+    severity: scam_strong
+    pattern: "send.*aadhaar|share.*aadhaar.*before"
+    description: "Asks for Aadhaar before any offer"
+    applies_to: india
+
+  - id: document_pan_pre_offer
+    severity: scam_strong
+    pattern: "send.*pan\\s+card|share.*pan.*before"
+    description: "Asks for PAN card before any offer"
+    applies_to: india
+
+  - id: document_otp_request
+    severity: scam_strong
+    pattern: "share.*otp|send.*otp"
+    description: "Asks for an OTP — never legitimate in hiring"
+    applies_to: global
+
+  - id: document_apk_download
+    severity: scam_strong
+    pattern: "download.*\\.apk|install.*company.*app"
+    description: "Asks the candidate to install an APK (sideloaded Android app)"
+    applies_to: global
+
+  # ── Contact-channel rules (warning) ───────────────────────────────────────
+  - id: contact_whatsapp_only
+    severity: warning
+    pattern: "(?:contact|reach)\\s+(?:us|me)\\s+(?:on|via|through)\\s+whatsapp"
+    description: "WhatsApp-only contact channel"
+    applies_to: global
+
+  - id: contact_telegram_only
+    severity: warning
+    pattern: "(?:contact|reach)\\s+(?:us|me)\\s+(?:on|via|through)\\s+telegram"
+    description: "Telegram-only contact channel"
+    applies_to: global
+
+  # ── MLM-pattern clusters (warning) ────────────────────────────────────────
+  - id: mlm_be_your_own_boss
+    severity: warning
+    pattern: "be\\s+your\\s+own\\s+boss"
+    description: "Classic MLM phrasing"
+    applies_to: global
+
+  - id: mlm_unlimited_earning
+    severity: warning
+    pattern: "unlimited\\s+earning\\s+potential"
+    description: "MLM income claim"
+    applies_to: global
+
+  - id: mlm_build_your_team
+    severity: warning
+    pattern: "build\\s+your\\s+(?:own\\s+)?team|recruit\\s+others"
+    description: "MLM recruitment phrasing"
+    applies_to: global
+
+  - id: mlm_passive_income
+    severity: warning
+    pattern: "passive\\s+income"
+    description: "Passive-income claim — uncommon in real employment"
+    applies_to: global
+
+  # ── Generic urgency / vagueness (info) ────────────────────────────────────
+  - id: generic_urgency
+    severity: info
+    pattern: "urgent\\s+hiring|immediate\\s+joining"
+    description: "Heavy urgency framing — informational only"
+    applies_to: global
+
+  - id: generic_evergreen
+    severity: info
+    pattern: "we'?re\\s+always\\s+hiring|always\\s+looking\\s+for\\s+great\\s+talent"
+    description: "Evergreen-listing language (correlated with ghost jobs)"
+    applies_to: global

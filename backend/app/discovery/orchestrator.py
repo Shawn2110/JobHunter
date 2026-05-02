@@ -8,11 +8,8 @@ import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.discovery.adapters.adzuna import AdzunaAdapter
 from app.discovery.adapters.base import DiscoveryAdapter
 from app.discovery.adapters.careers_page import CareersPageAdapter
-from app.discovery.adapters.jooble import JoobleAdapter
-from app.discovery.adapters.jsearch import JSearchAdapter
 from app.discovery.adapters.reddit import RedditAdapter
 from app.discovery.ats import detect_ats_family
 from app.discovery.dedupe import (
@@ -27,29 +24,46 @@ log = structlog.get_logger("app.discovery.orchestrator")
 
 
 def default_aggregator_adapters() -> list[DiscoveryAdapter]:
-    """All Mode-1 adapters; each self-skips if not configured."""
-    return [JSearchAdapter(), AdzunaAdapter(), JoobleAdapter()]
+    """Mode-1 commercial aggregator adapters. Removed in v0.2 —
+    quality-over-quantity stance per PRD § 3.2 and the cost / signal
+    tradeoff documented in ADR 0005. Stub kept so external callers
+    that import this name fail with an empty list, not ImportError.
+    """
+    return []
 
 
 def default_founder_post_adapters() -> list[DiscoveryAdapter]:
-    """Mode-2 adapters. Reddit is the only one viable without paid
-    Twitter / Wellfound API access in v1; rest land as follow-ups."""
+    """Mode-2 adapters. Reddit is keyless and ships in defaults."""
     return [RedditAdapter()]
 
 
 def default_careers_page_adapters() -> list[DiscoveryAdapter]:
-    """Mode-3 adapter. Single adapter that crawls each user-supplied
-    URL with per-domain rate limiting."""
+    """Mode-3 adapter. Crawls each user-supplied URL via JSON-LD
+    parsing (works for any site that ships JobPosting markup —
+    company careers pages, Naukri, Foundit, Wellfound, Cutshort,
+    Hasjob). Per-domain rate limit at 1 req / 5s."""
     return [CareersPageAdapter()]
+
+
+def default_keyless_adapters() -> list[DiscoveryAdapter]:
+    """The set that runs by default — every adapter that needs no
+    third-party API key.
+
+    Aggregators (JSearch / Adzuna / Jooble) require paid keys and are
+    opt-in; pass `modes=['aggregator']` (or include 'aggregator' in
+    a multi-mode list) to enable them.
+    """
+    return [*default_careers_page_adapters(), *default_founder_post_adapters()]
 
 
 def adapters_for_modes(modes: list[str] | None) -> list[DiscoveryAdapter]:
     """Resolve mode names to adapter instances.
 
-    Modes default to ['aggregator']. Pass any combination of
-    'aggregator' | 'founder_post' | 'careers_page'.
+    Modes default to the keyless set: careers_page + founder_post.
+    Pass any combination of 'aggregator' | 'founder_post' |
+    'careers_page' to override.
     """
-    modes = modes or ["aggregator"]
+    modes = modes or ["careers_page", "founder_post"]
     out: list[DiscoveryAdapter] = []
     if "aggregator" in modes:
         out.extend(default_aggregator_adapters())
@@ -72,7 +86,7 @@ async def run_discovery(
     - updated_jobs: rows that already existed and gained a new
       JobSource (or had last_seen_at bumped)
     """
-    adapters = adapters or default_aggregator_adapters()
+    adapters = adapters or default_keyless_adapters()
     enabled = [a for a in adapters if a.is_configured()]
     log.info(
         "discovery.start",

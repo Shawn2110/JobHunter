@@ -58,7 +58,7 @@ async def test_run_saved_search_first_run_returns_all_as_new(
     from app.discovery import orchestrator
     monkeypatch.setattr(
         orchestrator,
-        "default_aggregator_adapters",
+        "default_keyless_adapters",
         lambda: [_StaticAdapter([_seed_dj("New Engineer", "Acme")])],
     )
 
@@ -88,7 +88,7 @@ async def test_run_saved_search_second_run_only_returns_new(
     # First run discovers one job
     monkeypatch.setattr(
         orchestrator,
-        "default_aggregator_adapters",
+        "default_keyless_adapters",
         lambda: [_StaticAdapter([_seed_dj("Engineer A", "Acme")])],
     )
     first = await run_saved_search(sq, db_session)
@@ -107,7 +107,7 @@ async def test_run_saved_search_second_run_only_returns_new(
     # Second run discovers a NEW job + the existing one
     monkeypatch.setattr(
         orchestrator,
-        "default_aggregator_adapters",
+        "default_keyless_adapters",
         lambda: [
             _StaticAdapter([
                 _seed_dj("Engineer A", "Acme"),

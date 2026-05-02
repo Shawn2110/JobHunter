@@ -45,13 +45,6 @@ class Settings(BaseSettings):
     anthropic_model_default: str = "claude-sonnet-4-6"
     anthropic_model_high_stakes: str = "claude-opus-4-7"
 
-    # ── Job aggregators (Discovery Mode 1) ──────────────────────────────────
-    jsearch_api_key: str | None = None
-    adzuna_app_id: str | None = None
-    adzuna_app_key: str | None = None
-    jooble_api_key: str | None = None
-    theirstack_api_key: str | None = None
-
     # ── Search APIs (LinkedIn URL discovery, signal aggregation) ────────────
     brave_search_api_key: str | None = None
     serper_api_key: str | None = None
@@ -67,19 +60,6 @@ class Settings(BaseSettings):
     @property
     def has_ai(self) -> bool:
         return bool(self.anthropic_api_key)
-
-    @property
-    def configured_aggregators(self) -> list[str]:
-        out: list[str] = []
-        if self.jsearch_api_key:
-            out.append("jsearch")
-        if self.adzuna_app_id and self.adzuna_app_key:
-            out.append("adzuna")
-        if self.jooble_api_key:
-            out.append("jooble")
-        if self.theirstack_api_key:
-            out.append("theirstack")
-        return out
 
     @property
     def configured_search_provider(self) -> str | None:

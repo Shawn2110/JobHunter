@@ -30,6 +30,12 @@ class WatchlistCompany(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     careers_url: Mapped[str] = mapped_column(String(1024), nullable=False)
 
+    # Autodetected from careers_url at insert time. Null when the URL
+    # didn't match any known ATS host (the crawler will fall back to
+    # JSON-LD parsing).
+    ats_provider: Mapped[str | None] = mapped_column(String(32))
+    ats_slug: Mapped[str | None] = mapped_column(String(120))
+
     last_crawled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_diff_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_new_count: Mapped[int | None] = mapped_column()

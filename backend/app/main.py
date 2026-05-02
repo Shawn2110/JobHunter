@@ -51,7 +51,6 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         port=settings.backend_port,
         bind_public=settings.bind_public,
         ai_configured=settings.has_ai,
-        aggregators=settings.configured_aggregators,
         search_provider=settings.configured_search_provider,
         crawler=settings.configured_crawler,
     )
@@ -60,16 +59,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
             "jobhunt.no_ai_key",
             message=(
                 "ANTHROPIC_API_KEY not set — AI features will be unavailable. "
-                "Add it to .env when you're ready (required from Phase 1)."
-            ),
-        )
-    if not settings.configured_aggregators:
-        log.warning(
-            "jobhunt.no_aggregators",
-            message=(
-                "No job aggregator configured. Set at least one of "
-                "JSEARCH_API_KEY, ADZUNA_APP_ID/KEY, JOOBLE_API_KEY, "
-                "THEIRSTACK_API_KEY in .env to enable Discovery Mode 1."
+                "Add it via `python scripts/setup_ai.py` when you're ready."
             ),
         )
     yield

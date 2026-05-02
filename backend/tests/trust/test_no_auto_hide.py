@@ -43,7 +43,7 @@ async def test_search_response_includes_likely_scam_jobs(
     """
     monkeypatch.setattr(
         orchestrator,
-        "default_aggregator_adapters",
+        "default_keyless_adapters",
         lambda: [
             _StaticAdapter([
                 DiscoveredJob(

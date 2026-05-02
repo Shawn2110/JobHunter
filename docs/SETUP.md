@@ -13,27 +13,32 @@ cd JobHunter
 cp .env.example .env
 ```
 
-Open `.env` and fill in **only** the keys you want to use. Everything
-is opt-in — see the file for what each provider does and where to get
-a key.
+Or run the interactive setup CLI:
 
-The single key that becomes load-bearing once you start using AI
-features (Phase 1 onward) is `ANTHROPIC_API_KEY`. Without it, the
-backend boots cleanly but `/profile/resume`, fit assessment, tailoring,
-trust assessment, and outreach all return 503.
+```bash
+python scripts/setup_ai.py
+```
 
-For each category beyond AI, configure **at least one** provider:
+It writes `ANTHROPIC_API_KEY` into `.env` (the only required key)
+and leaves all other settings at their defaults.
 
-- **Job aggregators (Mode 1):** `JSEARCH_API_KEY`, or
-  `ADZUNA_APP_ID` + `ADZUNA_APP_KEY`, or `JOOBLE_API_KEY`, or
-  `THEIRSTACK_API_KEY`.
-- **Search APIs (LinkedIn URL discovery, Phase 6):**
-  `BRAVE_SEARCH_API_KEY` or `SERPER_API_KEY`.
-- **Careers-page crawl (Phase 8):** `FIRECRAWL_API_KEY` is optional;
-  the crawler falls back to a plain GET that handles ATS pages
-  shipping JSON-LD on first paint.
-- **Profile signals:** `GITHUB_TOKEN` raises GitHub's rate limit from
-  60 → 5000 req/hr.
+**Discovery sources are keyless** — Greenhouse, Lever, and Ashby
+publish public board APIs the system uses directly; Reddit's JSON
+API powers founder-post discovery. You don't need a job-aggregator
+subscription to use JobHunt. See [ADR 0005](decisions/0005-drop-aggregators-keyless-ats.md)
+for the rationale.
+
+Optional keys you can add later in `.env`:
+
+- **`BRAVE_SEARCH_API_KEY` or `SERPER_API_KEY`** — enables Phase 6
+  contact discovery (returns `linkedin.com/in` URLs the user clicks
+  manually; JobHunt never fetches LinkedIn pages itself).
+- **`GITHUB_TOKEN`** — raises GitHub's rate limit from 60 → 5000 req/hr
+  for handle signal fetches.
+- **`FIRECRAWL_API_KEY`** — would let the careers crawler handle SPA
+  pages (Naukri, Foundit, Wellfound). Not currently wired in; the
+  default keyless path covers Greenhouse / Lever / Ashby plus any
+  company-direct careers page that ships JSON-LD.
 
 ## 2. Run with Docker (recommended)
 

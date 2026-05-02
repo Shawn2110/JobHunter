@@ -5,6 +5,18 @@ One-line entries per task completion, newest first. Per
 
 ## 2026-05-02
 
+- **Discovery rebased to keyless ATS adapters.** 156 backend tests passing.
+  Removed JSearch / Adzuna / Jooble / TheirStack adapters + their
+  settings + `.env.example` entries entirely (see ADR 0005). Added
+  `discovery/ats_providers.py` (URL → provider+slug detector) and three
+  new keyless adapters: `adapters/greenhouse.py`,
+  `adapters/lever.py`, `adapters/ashby.py`. CareersPageAdapter
+  rewritten as a dispatcher (Greenhouse / Lever / Ashby URLs → board
+  API; everything else → JSON-LD parsing fallback). WatchlistCompany
+  gains `ats_provider` + `ats_slug` columns autodetected on insert.
+  `scripts/setup_ai.py` is now the recommended setup path — single
+  required key (Anthropic). Naukri / Foundit / Wellfound documented as
+  Playwright-path follow-ups, not shipped.
 - **Backend pipeline complete across all 11 phases. 134 backend tests passing.**
   Deferred surface documented in docs/decisions/0004-shipping-cuts-and-deferred-work.md.
 - P10 — Polish: /admin/export (every user-data table → JSON),

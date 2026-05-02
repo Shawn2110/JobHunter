@@ -18,7 +18,6 @@ async def test_providers_endpoint_shape(client: AsyncClient) -> None:
     body = response.json()
     # Shape only — values depend on which keys are set in .env
     assert "ai_configured" in body
-    assert "aggregators" in body
     assert "search_provider" in body
     assert "crawler" in body
-    assert isinstance(body["aggregators"], list)
+    assert "github_token_configured" in body

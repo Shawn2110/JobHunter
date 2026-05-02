@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
+from app.discovery.ats_providers import detect_ats
 from app.models import WatchlistCompany
 from app.workers.nightly import crawl_watchlist
 
@@ -25,6 +26,8 @@ class WatchlistOut(BaseModel):
     id: int
     name: str
     careers_url: str
+    ats_provider: str | None
+    ats_slug: str | None
     last_crawled_at: datetime | None
     last_diff_at: datetime | None
     last_new_count: int | None
@@ -52,7 +55,13 @@ async def add_company(
     payload: WatchlistIn,
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> WatchlistCompany:
-    row = WatchlistCompany(name=payload.name, careers_url=payload.careers_url)
+    detected = detect_ats(payload.careers_url)
+    row = WatchlistCompany(
+        name=payload.name,
+        careers_url=payload.careers_url,
+        ats_provider=detected[0] if detected else None,
+        ats_slug=detected[1] if detected else None,
+    )
     session.add(row)
     try:
         await session.commit()

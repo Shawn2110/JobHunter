@@ -24,7 +24,6 @@ async def providers() -> dict[str, object]:
     return {
         "version": __version__,
         "ai_configured": settings.has_ai,
-        "aggregators": settings.configured_aggregators,
         "search_provider": settings.configured_search_provider,
         "crawler": settings.configured_crawler,
         "github_token_configured": bool(settings.github_token),

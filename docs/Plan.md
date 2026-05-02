@@ -22,14 +22,19 @@ Phases run sequentially; tasks within a phase can run in parallel where noted. E
 ## 2. Current Status
 
 ```
-Phase: 10 (Polish — backend complete; some UI + DOCX deferred)
-Completed:   Phases 0, 1, 2, 3, 3.5, 4 (backend), 5 (backend + ext),
-             6 (backend), 7 (backend), 8, 9, 10 (admin + critical tests + docs)
+Phase: 10 (Polish — backend complete; UI + DOCX deferred)
+Completed:   Phases 0, 1, 2 (rebased to keyless ATS adapters), 3, 3.5,
+             4 (backend), 5 (backend + ext), 6 (backend), 7 (backend),
+             8 (Reddit + careers dispatcher), 9, 10 (admin + critical tests + docs)
+Discovery:   Keyless. Greenhouse + Lever + Ashby public board APIs
+             via CareersPageAdapter; Reddit hiring threads. Aggregators
+             (JSearch / Adzuna / Jooble / TheirStack) removed — see
+             docs/decisions/0005-drop-aggregators-keyless-ats.md.
 Deferred:    P3-T1 sentence-transformers swap (HashEmbedder ships),
              P4-T4 DOCX/PDF render (Markdown ships; lxml blocked locally),
              frontend pages for tailoring/contacts/outreach/watchlist/
-             applications/cost-dashboard, Twitter/Wellfound/Cutshort/
-             Hasjob adapters, Firecrawl backend.
+             applications/cost-dashboard, Naukri/Foundit/Wellfound
+             scrapers (Playwright path), Firecrawl backend.
              See docs/decisions/0004-shipping-cuts-and-deferred-work.md.
 Last updated: 2026-05-02
 ```

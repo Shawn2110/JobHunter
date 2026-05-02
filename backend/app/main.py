@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.api import extension, health, profile, search, tailoring
+from app.api import contacts, extension, health, profile, search, tailoring
 from app.config import settings
 
 
@@ -86,3 +86,4 @@ app.include_router(profile.router)
 app.include_router(search.router)
 app.include_router(tailoring.router)
 app.include_router(extension.router)
+app.include_router(contacts.router)

@@ -13,6 +13,7 @@ from app.models.profile import Profile, ProfileHandle
 from app.models.resume import Resume
 from app.models.tailoring import TailoredArtifact, TailoringBrief
 from app.models.trust import JobRepostHistory, TrustAssessment
+from app.models.watchlist import WatchlistCompany
 
 __all__ = [
     "AiCall",
@@ -29,4 +30,5 @@ __all__ = [
     "TailoredArtifact",
     "TailoringBrief",
     "TrustAssessment",
+    "WatchlistCompany",
 ]

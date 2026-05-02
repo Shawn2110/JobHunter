@@ -17,6 +17,7 @@ from app.api import (
     profile,
     search,
     tailoring,
+    watchlist,
 )
 from app.config import settings
 
@@ -96,3 +97,4 @@ app.include_router(tailoring.router)
 app.include_router(extension.router)
 app.include_router(contacts.router)
 app.include_router(outreach.router)
+app.include_router(watchlist.router)

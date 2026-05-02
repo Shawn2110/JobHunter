@@ -23,6 +23,7 @@ dependencies = [
     "anthropic>=0.39.0",
     "pypdf>=5.1.0",
     "docx2txt>=0.8",
+    "apscheduler>=3.10.4",
 ]
 
 [project.optional-dependencies]

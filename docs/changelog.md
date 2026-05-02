@@ -3,6 +3,30 @@
 One-line entries per task completion, newest first. Per
 [docs/Agent.md](Agent.md) and [docs/Plan.md](Plan.md) § 7.
 
+## 2026-05-02
+
+- **Phase 3.5 complete.** Active task: P4-T1 (tailoring meta-prompt). 111
+  backend tests passing.
+- P3.5-T6 — Trust UI integration: TrustBadge (renders only for
+  suspicious / likely_scam), TrustBreakdown panel on /jobs/[id], badge
+  inline on JobCard. Backend search endpoints refresh trust_assessment
+  for serialization. Critical Do-Not-Break tests:
+  test_no_auto_hide.py asserts /search and /jobs include likely_scam
+  rows; test_no_external_trust_share.py greps backend source for any
+  trust-data exfiltration pattern.
+- P3.5-T5 — Verdict composer: pure deterministic combiner per
+  Architecture § 5.6 decision tree. 8 tests across all branches.
+- P3.5-T4 — Longitudinal repost detection: canonical_job_id (company +
+  title + bigram fingerprint), record_sighting + evaluate_longitudinal
+  with 60/90-day windows. 5 tests.
+- P3.5-T3 — AI trust assessment prompt + service: hard constraints in
+  the prompt (only return likely_scam with strong rule hit OR clear
+  novel pattern; never flag based on size/sector/geography; default to
+  unknown on thin evidence).
+- P3.5-T2 — Static rules library: rules.yaml with 21 categorized
+  patterns + rules.py loader/runner with score composition. 8 tests.
+- P3.5-T1 — TrustAssessment + JobRepostHistory models + migration.
+
 ## 2026-04-28
 
 - **Phase 3 complete.** Active task: P3.5-T1 (trust data model). 90 backend

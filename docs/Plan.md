@@ -22,10 +22,10 @@ Phases run sequentially; tasks within a phase can run in parallel where noted. E
 ## 2. Current Status
 
 ```
-Phase: 3.5 (Trust Assessment)
-Active task: P3.5-T1 (trust data model)
-Completed:   Phase 0, Phase 1, Phase 2, Phase 3 (P3-T1..T5)
-Last updated: 2026-04-28
+Phase: 4 (Resume Tailoring)
+Active task: P4-T1 (tailoring meta-prompt)
+Completed:   Phase 0, Phase 1, Phase 2, Phase 3, Phase 3.5 (P3.5-T1..T6)
+Last updated: 2026-05-02
 ```
 
 This block is the canonical record. Update it after every meaningful checkpoint.

@@ -22,9 +22,11 @@ Phases run sequentially; tasks within a phase can run in parallel where noted. E
 ## 2. Current Status
 
 ```
-Phase: 4 (Resume Tailoring)
-Active task: P4-T1 (tailoring meta-prompt)
-Completed:   Phase 0, Phase 1, Phase 2, Phase 3, Phase 3.5 (P3.5-T1..T6)
+Phase: 5 (Application Packaging)
+Active task: P5-T1 (cover-letter prompts)
+Completed:   Phase 0–3.5, Phase 4 (P4-T1..T3, T5 backend)
+Deferred:    P4-T4 (DOCX/PDF render — python-docx blocked locally,
+             Markdown render lands instead), P4-T5 frontend UI
 Last updated: 2026-05-02
 ```
 

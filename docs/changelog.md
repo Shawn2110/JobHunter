@@ -5,6 +5,15 @@ One-line entries per task completion, newest first. Per
 
 ## 2026-05-02
 
+- **Phase 4 backend complete** (T4 DOCX render + T5 frontend UI deferred).
+  Active task: P5-T1. 119 backend tests passing.
+- P4 — Resume tailoring: Layer-1 meta-prompt + Layer-2 execution prompt
+  + truthfulness post-check + tailoring service + API endpoints
+  (POST /tailoring/jobs/{id}/brief, PUT briefs/{id}/edits,
+  POST briefs/{id}/execute). Critical test_truthfulness_check.py asserts
+  fabrication detection works (companies, titles, dates, education,
+  skills) — 8 tests. Markdown render lands; full DOCX/PDF deferred
+  because python-docx (lxml) is blocked by Application Control locally.
 - **Phase 3.5 complete.** Active task: P4-T1 (tailoring meta-prompt). 111
   backend tests passing.
 - P3.5-T6 — Trust UI integration: TrustBadge (renders only for

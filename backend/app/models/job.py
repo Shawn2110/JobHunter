@@ -70,6 +70,13 @@ class Job(Base):
         lazy="selectin",
         back_populates="job",
     )
+    trust_assessment: Mapped["TrustAssessment | None"] = relationship(  # type: ignore[name-defined]  # noqa: F821
+        "TrustAssessment",
+        uselist=False,
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        back_populates="job",
+    )
 
 
 class JobSource(Base):

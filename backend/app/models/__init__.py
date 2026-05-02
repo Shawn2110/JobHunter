@@ -9,14 +9,17 @@ from app.models.fit import FitAssessment
 from app.models.job import Job, JobSource, SearchQuery
 from app.models.profile import Profile, ProfileHandle
 from app.models.resume import Resume
+from app.models.trust import JobRepostHistory, TrustAssessment
 
 __all__ = [
     "AiCall",
     "FitAssessment",
     "Job",
+    "JobRepostHistory",
     "JobSource",
     "Profile",
     "ProfileHandle",
     "Resume",
     "SearchQuery",
+    "TrustAssessment",
 ]

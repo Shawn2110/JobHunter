@@ -10,8 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.discovery.adapters.adzuna import AdzunaAdapter
 from app.discovery.adapters.base import DiscoveryAdapter
+from app.discovery.adapters.careers_page import CareersPageAdapter
 from app.discovery.adapters.jooble import JoobleAdapter
 from app.discovery.adapters.jsearch import JSearchAdapter
+from app.discovery.adapters.reddit import RedditAdapter
 from app.discovery.ats import detect_ats_family
 from app.discovery.dedupe import (
     canonical_company,
@@ -27,6 +29,35 @@ log = structlog.get_logger("app.discovery.orchestrator")
 def default_aggregator_adapters() -> list[DiscoveryAdapter]:
     """All Mode-1 adapters; each self-skips if not configured."""
     return [JSearchAdapter(), AdzunaAdapter(), JoobleAdapter()]
+
+
+def default_founder_post_adapters() -> list[DiscoveryAdapter]:
+    """Mode-2 adapters. Reddit is the only one viable without paid
+    Twitter / Wellfound API access in v1; rest land as follow-ups."""
+    return [RedditAdapter()]
+
+
+def default_careers_page_adapters() -> list[DiscoveryAdapter]:
+    """Mode-3 adapter. Single adapter that crawls each user-supplied
+    URL with per-domain rate limiting."""
+    return [CareersPageAdapter()]
+
+
+def adapters_for_modes(modes: list[str] | None) -> list[DiscoveryAdapter]:
+    """Resolve mode names to adapter instances.
+
+    Modes default to ['aggregator']. Pass any combination of
+    'aggregator' | 'founder_post' | 'careers_page'.
+    """
+    modes = modes or ["aggregator"]
+    out: list[DiscoveryAdapter] = []
+    if "aggregator" in modes:
+        out.extend(default_aggregator_adapters())
+    if "founder_post" in modes:
+        out.extend(default_founder_post_adapters())
+    if "careers_page" in modes:
+        out.extend(default_careers_page_adapters())
+    return out
 
 
 async def run_discovery(

@@ -1,0 +1,40 @@
+# Per-domain selectors for the careers-page crawler.
+# Each entry: hostname → CSS selector for the JSON-LD JobPosting block,
+# or fallback selectors for title / description / apply link.
+# Add a domain by appending a new entry. The system reloads on each call.
+
+domains:
+  greenhouse.io:
+    list_url_pattern: "https://boards.greenhouse.io/{slug}"
+    list_item: ".opening a"
+    title: "h1.app-title"
+    description: "#content"
+    apply_link: ".btn-apply"
+
+  lever.co:
+    list_url_pattern: "https://jobs.lever.co/{slug}"
+    list_item: ".posting-title"
+    title: ".posting-headline h2"
+    description: ".posting-page section"
+    apply_link: ".postings-btn"
+
+  ashbyhq.com:
+    list_url_pattern: "https://jobs.ashbyhq.com/{slug}"
+    list_item: "a[href*='/jobs/']"
+    title: "h1"
+    description: "main"
+    apply_link: "a[href*='application']"
+
+  myworkdayjobs.com:
+    list_url_pattern: "https://{slug}.myworkdayjobs.com"
+    list_item: "[data-automation-id='jobTitle'] a"
+    title: "[data-automation-id='jobPostingHeader']"
+    description: "[data-automation-id='jobPostingDescription']"
+    apply_link: "[data-automation-id='applyManually']"
+
+  smartrecruiters.com:
+    list_url_pattern: "https://jobs.smartrecruiters.com/{slug}"
+    list_item: ".js-show-job"
+    title: "h1"
+    description: ".job-info"
+    apply_link: ".js-apply"

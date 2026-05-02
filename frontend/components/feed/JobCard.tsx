@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { FitBadge } from "@/components/feed/FitBadge";
+import { TrustBadge } from "@/components/feed/TrustBadge";
 import type { JobOut } from "@/lib/api";
 
 export function JobCard({ job }: { job: JobOut }) {
@@ -28,15 +29,29 @@ export function JobCard({ job }: { job: JobOut }) {
             {job.ats_family && <span>· {job.ats_family}</span>}
           </div>
 
-          {fit && (
-            <div className="pt-2">
-              <FitBadge verdict={fit.verdict} detail={skillsScore ?? undefined} />
-              {fit.summary_md && (
-                <p className="mt-1.5 text-xs text-neutral-600">
-                  {fit.summary_md}
-                </p>
+          {(fit || job.trust_assessment) && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-2">
+              {fit && (
+                <FitBadge
+                  verdict={fit.verdict}
+                  detail={skillsScore ?? undefined}
+                />
+              )}
+              {job.trust_assessment && (
+                <TrustBadge
+                  verdict={job.trust_assessment.verdict}
+                  reason={
+                    job.trust_assessment.scam_signals_json?.[0]?.description ??
+                    job.trust_assessment.ghost_job_signals_json?.[0]
+                      ?.description ??
+                    null
+                  }
+                />
               )}
             </div>
+          )}
+          {fit?.summary_md && (
+            <p className="mt-1.5 text-xs text-neutral-600">{fit.summary_md}</p>
           )}
 
           {knockouts.length > 0 && (

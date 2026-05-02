@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from "react";
 
 import { FitBadge } from "@/components/feed/FitBadge";
+import { TrustBreakdown } from "@/components/feed/TrustBreakdown";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getJobDetail, type JobOut } from "@/lib/api";
@@ -117,6 +118,10 @@ export default function JobDetailPage({
               <Dimension label="Evidence" value={fit.evidence_strength} />
             )}
           </section>
+        )}
+
+        {job.trust_assessment && (
+          <TrustBreakdown trust={job.trust_assessment} />
         )}
 
         {knockouts.length > 0 && (

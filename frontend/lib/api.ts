@@ -150,6 +150,33 @@ export interface FitAssessmentOut {
   computed_at: string;
 }
 
+export type TrustVerdict =
+  | "verified"
+  | "likely_real"
+  | "suspicious"
+  | "likely_scam"
+  | "unknown";
+
+export interface TrustSignal {
+  id?: string;
+  kind?: string;
+  severity: string;
+  description: string;
+  source?: string;
+}
+
+export interface TrustAssessmentOut {
+  verdict: TrustVerdict;
+  rationale_md: string | null;
+  scam_signals_json: TrustSignal[] | null;
+  ghost_job_signals_json: TrustSignal[] | null;
+  positive_signals_json: TrustSignal[] | null;
+  static_check_score: number | null;
+  ai_check_score: number | null;
+  longitudinal_score: number | null;
+  computed_at: string;
+}
+
 export interface JobOut {
   id: number;
   title: string;
@@ -166,6 +193,7 @@ export interface JobOut {
   last_seen_at: string;
   sources: JobSourceOut[];
   fit_assessment: FitAssessmentOut | null;
+  trust_assessment: TrustAssessmentOut | null;
 }
 
 export interface SearchResponse {

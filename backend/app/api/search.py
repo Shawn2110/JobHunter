@@ -34,6 +34,18 @@ class FitAssessmentOut(BaseModel):
     computed_at: datetime
 
 
+class TrustAssessmentOut(BaseModel):
+    verdict: str
+    rationale_md: str | None
+    scam_signals_json: list[dict[str, Any]] | None
+    ghost_job_signals_json: list[dict[str, Any]] | None
+    positive_signals_json: list[dict[str, Any]] | None
+    static_check_score: int | None
+    ai_check_score: int | None
+    longitudinal_score: int | None
+    computed_at: datetime
+
+
 class JobOut(BaseModel):
     id: int
     title: str
@@ -50,6 +62,7 @@ class JobOut(BaseModel):
     last_seen_at: datetime
     sources: list[JobSourceOut]
     fit_assessment: FitAssessmentOut | None = None
+    trust_assessment: TrustAssessmentOut | None = None
 
 
 class SearchResponse(BaseModel):
@@ -64,9 +77,17 @@ async def search(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> dict[str, Any]:
     new_jobs, updated_jobs = await run_discovery(payload, session=session)
-    # Refresh sources for serialization
+    # Refresh relationships + server-defaults for serialization.
     for j in [*new_jobs, *updated_jobs]:
-        await session.refresh(j, attribute_names=["sources", "last_seen_at"])
+        await session.refresh(
+            j,
+            attribute_names=[
+                "sources",
+                "last_seen_at",
+                "fit_assessment",
+                "trust_assessment",
+            ],
+        )
     all_jobs = [*new_jobs, *updated_jobs]
     return {
         "new_count": len(new_jobs),
@@ -178,7 +199,15 @@ async def run_saved(
         )
     result = await run_saved_search(sq, session)
     for j in [*result.new_jobs, *result.updated_jobs]:
-        await session.refresh(j, attribute_names=["sources", "last_seen_at"])
+        await session.refresh(
+            j,
+            attribute_names=[
+                "sources",
+                "last_seen_at",
+                "fit_assessment",
+                "trust_assessment",
+            ],
+        )
     return {
         "ran_at": result.ran_at,
         "previous_run_at": result.previous_run_at,

@@ -3,6 +3,35 @@
 One-line entries per task completion, newest first. Per
 [docs/Agent.md](Agent.md) and [docs/Plan.md](Plan.md) § 7.
 
+## 2026-05-04
+
+- **v1 wave 2 complete: end-to-end tailoring loop is live.** 164 backend
+  tests passing.
+- Schema change: `tailoring_brief.kind` discriminator + nullable
+  `tailored_artifact.brief_id` + direct `tailored_artifact.job_id` so
+  cover-letter and custom-question artifacts can persist without a
+  resume-tailoring brief. SQLite migration via raw RENAME / CREATE
+  TABLE / INSERT-SELECT (batch_alter_table can't do nullability changes
+  cleanly when the FK was auto-named).
+- `services/cover_letter.py`: one-shot Layer-1 brief → Layer-2
+  execution. Persists `TailoringBrief(kind="cover_letter")` plus
+  `TailoredArtifact(kind="cover_letter")` with body in `content_md`.
+- API endpoints:
+  • `POST /tailoring/jobs/{id}/cover-letter` — one-shot
+  • `POST /tailoring/jobs/{id}/custom-questions` — runs all 5 (or a
+    subset via `{"keys": [...]}`)
+  • `GET /tailoring/jobs/{id}/artifacts` — list any-kind artifacts
+- `frontend/app/jobs/[id]/package/page.tsx`: three-section page
+  (resume / cover letter / custom answers) with generate / regenerate /
+  copy buttons, truthfulness-violation warning panel for resumes,
+  collapsible brief + reasoning views, deep-link to ATS apply URL.
+- `frontend/app/jobs/[id]/page.tsx`: enables the previously-disabled
+  "Tailor resume" button — now links to the package page.
+- `docs/decisions/0006-v1-v2-product-split.md`: documents the
+  architectural split — v1 = web app + thin extension, v2 = extension
+  as primary surface. Apify add-on for non-LinkedIn SPAs scoped to
+  v1.x, not v1 wave 2.
+
 ## 2026-05-02
 
 - **Discovery rebased to keyless ATS adapters.** 156 backend tests passing.

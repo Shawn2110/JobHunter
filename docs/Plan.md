@@ -22,21 +22,32 @@ Phases run sequentially; tasks within a phase can run in parallel where noted. E
 ## 2. Current Status
 
 ```
-Phase: 10 (Polish — backend complete; UI + DOCX deferred)
-Completed:   Phases 0, 1, 2 (rebased to keyless ATS adapters), 3, 3.5,
-             4 (backend), 5 (backend + ext), 6 (backend), 7 (backend),
-             8 (Reddit + careers dispatcher), 9, 10 (admin + critical tests + docs)
-Discovery:   Keyless. Greenhouse + Lever + Ashby public board APIs
-             via CareersPageAdapter; Reddit hiring threads. Aggregators
-             (JSearch / Adzuna / Jooble / TheirStack) removed — see
-             docs/decisions/0005-drop-aggregators-keyless-ats.md.
-Deferred:    P3-T1 sentence-transformers swap (HashEmbedder ships),
-             P4-T4 DOCX/PDF render (Markdown ships; lxml blocked locally),
-             frontend pages for tailoring/contacts/outreach/watchlist/
-             applications/cost-dashboard, Naukri/Foundit/Wellfound
-             scrapers (Playwright path), Firecrawl backend.
-             See docs/decisions/0004-shipping-cuts-and-deferred-work.md.
-Last updated: 2026-05-02
+Version:     v1 wave 2 complete
+Active:      v1.x (search-elsewhere panel, extension JD extraction
+             for one portal, Apify adapter for SPA fallback)
+Next major:  v2 — extension as primary surface (in-page scoring overlay)
+
+See docs/decisions/0006-v1-v2-product-split.md for the v1/v2 split.
+
+v1 surface (shipped, end-to-end usable):
+  • Web app at localhost:3000 — profile, search, jobs, package
+  • Discovery: keyless Greenhouse / Lever / Ashby + Reddit
+    + watchlist + careers-page JSON-LD fallback
+    (per ADR 0005; aggregator adapters removed)
+  • AI: fit, trust (3 layers), knockouts, resume tailoring,
+    cover letter, custom-question answers
+  • Extension: autofill bar + popup save (URL+title only — v1.x
+    enhances this to send full JD text per portal)
+  • CLI: scripts/setup_ai.py for Anthropic key
+
+Still deferred:
+  • DOCX/PDF resume render (Markdown ships; python-docx blocked
+    locally — see ADR 0004)
+  • sentence-transformers swap for HashEmbedder
+  • Frontend pages: contacts, outreach, watchlist, applications,
+    cost dashboard
+
+Last updated: 2026-05-04
 ```
 
 This block is the canonical record. Update it after every meaningful checkpoint.

@@ -17,8 +17,13 @@ from app.db import Base
 
 
 class TailoringBrief(Base):
-    """Layer-1 output — the tailoring strategy. Editable by the user
-    before Layer-2 execution.
+    """Layer-1 output — the strategy that drives Layer-2 execution.
+
+    Used for both resume tailoring and cover-letter generation; the
+    `kind` discriminator distinguishes them. Brief schemas differ
+    structurally per kind. The user can edit the brief before
+    execution (resume tailoring is the primary case for that flow;
+    cover letters today run inline without an edit step).
     """
 
     __tablename__ = "tailoring_brief"
@@ -29,6 +34,10 @@ class TailoringBrief(Base):
     )
     base_resume_id: Mapped[int] = mapped_column(
         ForeignKey("resume.id", ondelete="CASCADE"), nullable=False
+    )
+    # resume | cover_letter
+    kind: Mapped[str] = mapped_column(
+        String(32), nullable=False, server_default="resume", index=True
     )
     brief_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     user_edits_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
@@ -54,13 +63,19 @@ class TailoredArtifact(Base):
     __tablename__ = "tailored_artifact"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    brief_id: Mapped[int] = mapped_column(
-        ForeignKey("tailoring_brief.id", ondelete="CASCADE"),
-        nullable=False,
+    job_id: Mapped[int] = mapped_column(
+        ForeignKey("job.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    # Optional — resume tailoring artifacts always have a brief; cover
+    # letters do today (one created inline); custom-question answers
+    # don't need one.
+    brief_id: Mapped[int | None] = mapped_column(
+        ForeignKey("tailoring_brief.id", ondelete="SET NULL"),
+        nullable=True,
         index=True,
     )
     # resume / cover_letter / custom_answers
-    kind: Mapped[str] = mapped_column(String(32), nullable=False)
+    kind: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     content_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     content_md: Mapped[str | None] = mapped_column(Text)
     output_file_path: Mapped[str | None] = mapped_column(String(512))
@@ -74,4 +89,4 @@ class TailoredArtifact(Base):
         nullable=False,
     )
 
-    brief: Mapped[TailoringBrief] = relationship(back_populates="artifacts")
+    brief: Mapped[TailoringBrief | None] = relationship(back_populates="artifacts")

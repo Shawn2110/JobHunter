@@ -8,7 +8,6 @@ export interface HealthResponse {
 export interface ProvidersResponse {
   version: string;
   ai_configured: boolean;
-  aggregators: string[];
   search_provider: string | null;
   crawler: string;
   github_token_configured: boolean;

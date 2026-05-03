@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   fetchHealth,
   fetchProviders,
@@ -17,23 +18,20 @@ type HealthStatus =
 export default function HomePage() {
   const [status, setStatus] = useState<HealthStatus>({ kind: "loading" });
 
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        await fetchHealth();
-        const providers = await fetchProviders();
-        if (!cancelled) setStatus({ kind: "ok", providers });
-      } catch (err) {
-        if (!cancelled) {
-          setStatus({ kind: "error", message: (err as Error).message });
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+  const probe = useCallback(async () => {
+    setStatus({ kind: "loading" });
+    try {
+      await fetchHealth();
+      const providers = await fetchProviders();
+      setStatus({ kind: "ok", providers });
+    } catch (err) {
+      setStatus({ kind: "error", message: (err as Error).message });
+    }
   }, []);
+
+  useEffect(() => {
+    void probe();
+  }, [probe]);
 
   return (
     <main className="mx-auto max-w-2xl space-y-6 px-6 py-16">
@@ -53,21 +51,36 @@ export default function HomePage() {
         {status.kind === "ok" && <ProvidersList providers={status.providers} />}
 
         {status.kind === "error" && (
-          <p className="text-sm text-red-600">
-            Backend unreachable: {status.message}. Is the FastAPI server
-            running on{" "}
-            <code className="rounded bg-neutral-100 px-1">
-              {process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"}
-            </code>
-            ?
-          </p>
+          <div className="space-y-3">
+            <p className="text-sm text-red-600">
+              Backend unreachable: {status.message}. Is the FastAPI server
+              running on{" "}
+              <code className="rounded bg-neutral-100 px-1">
+                {process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"}
+              </code>
+              ?
+            </p>
+            <Button size="sm" variant="outline" onClick={() => void probe()}>
+              Retry
+            </Button>
+          </div>
         )}
       </section>
 
       <p className="text-xs text-neutral-400">
-        Pre-flight (Phase 0). See{" "}
-        <code className="rounded bg-neutral-100 px-1">docs/Plan.md</code> for
-        what&apos;s next.
+        Set up your{" "}
+        <a href="/profile" className="underline hover:text-neutral-600">
+          profile
+        </a>{" "}
+        and run a{" "}
+        <a href="/search" className="underline hover:text-neutral-600">
+          search
+        </a>{" "}
+        to begin. Run{" "}
+        <code className="rounded bg-neutral-100 px-1">
+          python scripts/setup_ai.py
+        </code>{" "}
+        to add your Anthropic key.
       </p>
     </main>
   );
@@ -88,22 +101,9 @@ function ProvidersList({ providers }: { providers: ProvidersResponse }) {
     [
       { label: "Anthropic Claude", configured: providers.ai_configured },
       {
-        label: "Job aggregators",
-        configured: providers.aggregators.length > 0,
-        detail:
-          providers.aggregators.length > 0
-            ? providers.aggregators.join(", ")
-            : undefined,
-      },
-      {
-        label: "Search API",
+        label: "Search API (Phase 6)",
         configured: providers.search_provider !== null,
         detail: providers.search_provider ?? undefined,
-      },
-      {
-        label: "Careers crawler",
-        configured: providers.crawler === "firecrawl",
-        detail: providers.crawler,
       },
       {
         label: "GitHub signals",
@@ -140,6 +140,10 @@ function ProvidersList({ providers }: { providers: ProvidersResponse }) {
           </li>
         ))}
       </ul>
+      <p className="pt-2 text-[11px] text-neutral-400">
+        Discovery is keyless — Greenhouse / Lever / Ashby + Reddit. Add
+        Brave or Serper key for LinkedIn URL discovery.
+      </p>
     </div>
   );
 }

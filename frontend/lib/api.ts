@@ -223,3 +223,87 @@ export async function listJobs(
 export async function getJobDetail(id: number): Promise<JobOut> {
   return getJson<JobOut>(`/jobs/${id}`);
 }
+
+// ─── Tailoring (resume + cover letter + custom questions) ─────────────────
+
+export interface BriefOut {
+  id: number;
+  job_id: number;
+  base_resume_id: number;
+  kind: string;
+  brief_json: Record<string, unknown>;
+  user_edits_json: Record<string, unknown> | null;
+  approved_at: string | null;
+  executed_at: string | null;
+  created_at: string;
+}
+
+export interface ArtifactOut {
+  id: number;
+  job_id: number;
+  brief_id: number | null;
+  kind: "resume" | "cover_letter" | "custom_answers";
+  content_json: Record<string, unknown> | null;
+  content_md: string | null;
+  truthfulness_passed: boolean | null;
+  truthfulness_violations_json: string[] | null;
+  created_at: string;
+}
+
+export interface CoverLetterOut {
+  brief: BriefOut;
+  artifact: ArtifactOut;
+}
+
+export interface CustomAnswerOut {
+  key: string;
+  question: string;
+  answer_md: string;
+  word_count: number;
+}
+
+export interface CustomQuestionsOut {
+  artifact_id: number;
+  answers: CustomAnswerOut[];
+}
+
+async function postJson<T>(
+  path: string,
+  body: Record<string, unknown> = {},
+): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    throw new Error(`POST ${path} returned ${res.status}: ${await res.text()}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+export function createTailoringBrief(jobId: number): Promise<BriefOut> {
+  return postJson<BriefOut>(`/tailoring/jobs/${jobId}/brief`);
+}
+
+export function executeTailoring(briefId: number): Promise<ArtifactOut> {
+  return postJson<ArtifactOut>(`/tailoring/briefs/${briefId}/execute`);
+}
+
+export function createCoverLetter(jobId: number): Promise<CoverLetterOut> {
+  return postJson<CoverLetterOut>(`/tailoring/jobs/${jobId}/cover-letter`);
+}
+
+export function createCustomAnswers(
+  jobId: number,
+  keys?: string[],
+): Promise<CustomQuestionsOut> {
+  return postJson<CustomQuestionsOut>(
+    `/tailoring/jobs/${jobId}/custom-questions`,
+    keys ? { keys } : {},
+  );
+}
+
+export function listJobArtifacts(jobId: number): Promise<ArtifactOut[]> {
+  return getJson<ArtifactOut[]>(`/tailoring/jobs/${jobId}/artifacts`);
+}

@@ -165,14 +165,20 @@ export default function JobDetailPage({
               </Button>
             </a>
           )}
+          <a href={`/jobs/${job.id}/package`} className="block">
+            <Button className="w-full" variant="default">
+              Open application package
+            </Button>
+          </a>
+          <p className="text-[11px] text-neutral-400">
+            Tailored resume, cover letter, custom-question answers — all
+            on one page.
+          </p>
           <Button className="w-full" variant="outline" disabled>
-            Tailor resume (Phase 4)
+            Find contacts (v2)
           </Button>
           <Button className="w-full" variant="outline" disabled>
-            Find contacts (Phase 6)
-          </Button>
-          <Button className="w-full" variant="outline" disabled>
-            Draft outreach (Phase 7)
+            Draft outreach (v2)
           </Button>
         </div>
       </aside>

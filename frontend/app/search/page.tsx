@@ -123,8 +123,8 @@ export default function SearchPage() {
           </Button>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <p className="text-xs text-neutral-400">
-            Mode 1 only (aggregators). Founder posts and careers pages are
-            opt-in modes that land in Phase 8.
+            Discovery is keyless — Greenhouse / Lever / Ashby careers
+            (via watchlist URLs) plus Reddit hiring threads.
           </p>
         </form>
       </aside>

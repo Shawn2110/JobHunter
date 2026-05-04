@@ -22,29 +22,41 @@ Phases run sequentially; tasks within a phase can run in parallel where noted. E
 ## 2. Current Status
 
 ```
-Version:     v1.x complete (web-app product end-to-end)
-Active:      v2 prep — extension live-scoring overlay design
-Next major:  v2 — in-page fit/trust panel + save-and-tailor in-overlay
+Version:     v2 wave 1 complete — extension is the primary surface
+Active:      v2.x polish (per-portal selector tuning, in-overlay tailoring
+             pre-generation, cost ticker)
+Next major:  v2.x or v3 — outreach + contact discovery in-overlay
 
 See docs/decisions/0006-v1-v2-product-split.md for the v1/v2 split.
 
-v1 surface (shipped, end-to-end usable):
+v2 wave 1 surface (shipped):
+  • Extension overlay (PRIMARY): mounts on supported job pages,
+    extracts JD via per-portal selectors, calls /extension/score
+    for live fit + trust + knockouts (no persistence). Save &
+    tailor button → /extension/save-and-tailor → deep-links to
+    package page. SPA-aware (re-mounts on URL change).
+  • Backend: POST /extension/score (live preview) + POST
+    /extension/save-and-tailor (persist + return package URL).
+    Stateless preview helpers compute_fit_dict + compute_trust_dict
+    extracted from the persisting wrappers.
+  • Web app re-framed for setup + review (Nav pill + home page
+    'Use the extension' card; secondary 'This web app is for' card).
+  • Critical Do-Not-Break tests still all pass:
+    test_no_autosubmit, test_extension_uses_only_localhost_backend,
+    test_no_linkedin, test_no_external_trust_share,
+    test_truthfulness_check, test_no_auto_hide.
+
+v1 surface (still usable, now secondary):
   • Web app at localhost:3000 — profile, search, jobs, package
   • Discovery: keyless Greenhouse / Lever / Ashby + Reddit
-    + watchlist + careers-page JSON-LD fallback
-    (per ADR 0005; aggregator adapters removed)
+    + watchlist + careers-page JSON-LD fallback (per ADR 0005)
   • AI: fit, trust (3 layers), knockouts, resume tailoring,
     cover letter, custom-question answers — all behind /tailoring
     endpoints + /jobs/[id]/package frontend page
-  • Extension: autofill bar + popup save with rich JD payload
-    (per-portal selectors for Naukri/Greenhouse/Lever/Ashby/Foundit/
-    Wellfound/Workday + generic fallbacks)
+  • Extension popup save with rich JD payload (now secondary to
+    the auto-mounted scoring overlay)
   • Search-elsewhere panel: 7 portal deep-links from /search form
-    (LinkedIn / Naukri / Indeed / Foundit / Wellfound / Glassdoor /
-    HN Who's Hiring) — opens native search in user's logged-in
-    browser session; zero JobHunt-side fetches
   • Apify opt-in: paid SPA fallback for Naukri/Foundit/Wellfound
-    when token + per-portal Actor configured. LinkedIn excluded.
   • CLI: scripts/setup_ai.py for Anthropic key
 
 Still deferred:

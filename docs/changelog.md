@@ -5,6 +5,30 @@ One-line entries per task completion, newest first. Per
 
 ## 2026-05-04
 
+- **v2 wave 1 complete: extension is the primary product surface.**
+  193 backend tests passing.
+- v2 — In-page scoring overlay: extension/content.js auto-mounts on
+  supported job pages whenever extracted JD > 200 chars (filters out
+  search/landing pages). Initial 'Score this job?' card is opt-in
+  (user clicks to spend Anthropic tokens). Full panel shows fit
+  verdict + trust badge (only when concerning) + knockouts + Save &
+  tailor / Just save / Close actions. SPA-aware re-mount on URL
+  change. Coexists with the existing autofill bar.
+- v2 — Backend: POST /extension/score (live preview, no persistence)
+  + POST /extension/save-and-tailor (persist Job + return package_url).
+  Refactor: extracted compute_fit_dict (in app/ai/fit.py) and
+  compute_trust_dict (in app/trust/service.py) as stateless helpers
+  the persisting wrappers now call. compute_trust_dict skips Layer C
+  (longitudinal) since there's no Job row during preview. 7 new tests
+  including test_score_does_not_persist_anything which guards the
+  no-side-effects contract.
+- v2 — Frontend re-framing: Nav.tsx adds 'extension is the main surface'
+  pill; app/page.tsx restructured into 3 sections (backend status,
+  prominent 'Use the extension' card with install steps, secondary
+  'This web app is for' card listing setup + review + optional search
+  roles).
+- v2 — docs/decisions/0007-v2-wave-1-extension-primary.md: full
+  rationale + what's deferred to v2.x.
 - **v1.x complete: search-elsewhere panel + rich-payload extension save +
   Apify SPA fallback. 186 backend tests passing.**
 - v1.x — Apify SPA fallback: opt-in adapter at

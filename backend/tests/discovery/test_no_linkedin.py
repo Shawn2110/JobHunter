@@ -61,3 +61,36 @@ def test_no_linkedin_in_discovery_adapters() -> None:
         f"discovery/adapters/ contains a LinkedIn adapter: {files & forbidden}. "
         "PRD § 3.2: no LinkedIn ingestion ever."
     )
+
+
+def test_apify_portal_detection_excludes_linkedin() -> None:
+    """The Apify SPA-fallback adapter must reject LinkedIn URLs even if
+    a future maintainer adds an APIFY_LINKEDIN_ACTOR config field.
+    Per ADR 0006: Apify is for non-LinkedIn SPAs only.
+    """
+    from app.discovery.adapters.apify import detect_apify_portal
+
+    for url in [
+        "https://www.linkedin.com/jobs/view/12345",
+        "https://linkedin.com/jobs/search",
+        "https://in.linkedin.com/jobs",
+        "https://www.linkedin.com/in/some-profile",
+    ]:
+        assert detect_apify_portal(url) is None, (
+            f"Apify portal detector matched LinkedIn URL: {url!r}. "
+            "Per ADR 0006, LinkedIn must remain excluded from Apify routing."
+        )
+
+
+def test_no_apify_linkedin_actor_config() -> None:
+    """No APIFY_LINKEDIN_* config field exists on Settings. Adding one
+    would imply LinkedIn could be routed through Apify; this guards
+    against that."""
+    from app.config import Settings
+
+    fields = set(Settings.model_fields)
+    linkedin_fields = {f for f in fields if "linkedin" in f.lower()}
+    assert linkedin_fields == set(), (
+        f"Found LinkedIn-related config fields: {linkedin_fields}. "
+        "Per ADR 0006, no LinkedIn integration ships in any form."
+    )

@@ -9,7 +9,7 @@ from typing import Any
 import httpx
 import structlog
 
-from app.discovery.adapters import ashby, greenhouse, lever
+from app.discovery.adapters import apify, ashby, greenhouse, lever
 from app.discovery.adapters.base import DiscoveryAdapter
 from app.discovery.ats_providers import detect_ats
 from app.discovery.types import DiscoveredJob, SearchInput
@@ -96,6 +96,21 @@ async def crawl_urls(urls: list[str]) -> list[DiscoveredJob]:
                         "careers_page.ats_error",
                         provider=provider,
                         slug=slug,
+                        error=type(e).__name__,
+                    )
+                continue
+
+            # Apify fallback for SPA portals (Naukri / Foundit / Wellfound).
+            # No-op if Apify isn't configured. LinkedIn is intentionally
+            # excluded (per ADR 0006); detect_apify_portal won't match.
+            if apify.detect_apify_portal(url):
+                try:
+                    apify_jobs = await apify.fetch_for_url(url, client=client)
+                    out.extend(apify_jobs)
+                except httpx.HTTPError as e:
+                    log.warning(
+                        "careers_page.apify_error",
+                        url=url,
                         error=type(e).__name__,
                     )
                 continue

@@ -52,6 +52,15 @@ class Settings(BaseSettings):
     # ── Careers-page crawler ────────────────────────────────────────────────
     firecrawl_api_key: str | None = None
 
+    # ── Apify (optional, for SPA portals Naukri/Foundit/Wellfound) ──────────
+    # Set APIFY_API_TOKEN + per-portal Actor IDs to enable. Leave any
+    # actor blank to disable that portal. LinkedIn is intentionally
+    # NOT supported here; see ADR 0006.
+    apify_api_token: str | None = None
+    apify_naukri_actor: str | None = None  # e.g. "epctex/naukri-scraper"
+    apify_foundit_actor: str | None = None
+    apify_wellfound_actor: str | None = None
+
     # ── Public profile signals ──────────────────────────────────────────────
     github_token: str | None = None
 
@@ -60,6 +69,22 @@ class Settings(BaseSettings):
     @property
     def has_ai(self) -> bool:
         return bool(self.anthropic_api_key)
+
+    def get_apify_actor(self, portal: str) -> str | None:
+        """Look up the configured Apify Actor ID for a portal name.
+
+        Returns None if Apify isn't configured or this portal isn't
+        wired up. Caller should treat None as 'skip Apify path'.
+        """
+        if not self.apify_api_token:
+            return None
+        if portal == "naukri":
+            return self.apify_naukri_actor
+        if portal == "foundit":
+            return self.apify_foundit_actor
+        if portal == "wellfound":
+            return self.apify_wellfound_actor
+        return None
 
     @property
     def configured_search_provider(self) -> str | None:

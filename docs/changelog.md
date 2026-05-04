@@ -5,6 +5,32 @@ One-line entries per task completion, newest first. Per
 
 ## 2026-05-04
 
+- **v1.x complete: search-elsewhere panel + rich-payload extension save +
+  Apify SPA fallback. 186 backend tests passing.**
+- v1.x — Apify SPA fallback: opt-in adapter at
+  `backend/app/discovery/adapters/apify.py` for Naukri / Foundit /
+  Wellfound. Activates only when `APIFY_API_TOKEN` + the relevant
+  per-portal Actor ID is set. Wired into the careers-page dispatcher
+  so any watchlist URL on those hosts routes through Apify when
+  configured, else dormant. LinkedIn explicitly excluded with two
+  new structural guards in `test_no_linkedin.py` (portal detector
+  returns None for LinkedIn URLs; Settings has no `linkedin`-named
+  fields). 15 tests covering portal detection, parsing, 404 handling,
+  config gating, LinkedIn exclusion.
+- v1.x — Extension rich-payload save: `extension/content.js` now has
+  per-portal SELECTORS for Naukri / Greenhouse / Lever / Ashby /
+  Foundit / Wellfound / Workday with generic h1/title/main fallbacks.
+  `extractJobFromPage()` returns `{portal, title, company, location,
+  description_md, apply_url}`. Popup asks the active tab's content
+  script for the rich payload; falls back to URL+title if the script
+  didn't inject. Backend `/extension/save-job` accepts both shapes,
+  dedups on `apply_url`, records portal in `source_provider`. 5 new
+  API tests.
+- v1.x — Search-elsewhere panel: `frontend/lib/external_search.ts`
+  + new section in the `/search` form. 7 portal buttons (LinkedIn,
+  Naukri, Indeed, Foundit, Wellfound, Glassdoor, HN Who's Hiring)
+  open native search in a new tab using user's logged-in browser
+  session. Pure URL templates; zero JobHunt-side fetches.
 - **v1 wave 2 complete: end-to-end tailoring loop is live.** 164 backend
   tests passing.
 - Schema change: `tailoring_brief.kind` discriminator + nullable

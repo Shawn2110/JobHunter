@@ -22,10 +22,9 @@ Phases run sequentially; tasks within a phase can run in parallel where noted. E
 ## 2. Current Status
 
 ```
-Version:     v1 wave 2 complete
-Active:      v1.x (search-elsewhere panel, extension JD extraction
-             for one portal, Apify adapter for SPA fallback)
-Next major:  v2 — extension as primary surface (in-page scoring overlay)
+Version:     v1.x complete (web-app product end-to-end)
+Active:      v2 prep — extension live-scoring overlay design
+Next major:  v2 — in-page fit/trust panel + save-and-tailor in-overlay
 
 See docs/decisions/0006-v1-v2-product-split.md for the v1/v2 split.
 
@@ -35,9 +34,17 @@ v1 surface (shipped, end-to-end usable):
     + watchlist + careers-page JSON-LD fallback
     (per ADR 0005; aggregator adapters removed)
   • AI: fit, trust (3 layers), knockouts, resume tailoring,
-    cover letter, custom-question answers
-  • Extension: autofill bar + popup save (URL+title only — v1.x
-    enhances this to send full JD text per portal)
+    cover letter, custom-question answers — all behind /tailoring
+    endpoints + /jobs/[id]/package frontend page
+  • Extension: autofill bar + popup save with rich JD payload
+    (per-portal selectors for Naukri/Greenhouse/Lever/Ashby/Foundit/
+    Wellfound/Workday + generic fallbacks)
+  • Search-elsewhere panel: 7 portal deep-links from /search form
+    (LinkedIn / Naukri / Indeed / Foundit / Wellfound / Glassdoor /
+    HN Who's Hiring) — opens native search in user's logged-in
+    browser session; zero JobHunt-side fetches
+  • Apify opt-in: paid SPA fallback for Naukri/Foundit/Wellfound
+    when token + per-portal Actor configured. LinkedIn excluded.
   • CLI: scripts/setup_ai.py for Anthropic key
 
 Still deferred:

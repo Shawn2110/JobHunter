@@ -13,10 +13,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true; // async response
   }
   if (msg?.type === "save_job_url") {
+    // Two payload shapes for back-compat:
+    //   - new: { payload: {portal, title, company, location, description_md, apply_url} }
+    //   - old: { url, title }
+    const body = msg.payload
+      ? msg.payload
+      : { url: msg.url, title: msg.title ?? null };
     fetch(`${BACKEND}/extension/save-job`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: msg.url, title: msg.title ?? null }),
+      body: JSON.stringify(body),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((body) => sendResponse({ ok: true, job: body }))

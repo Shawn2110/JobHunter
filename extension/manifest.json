@@ -3,15 +3,19 @@
   "name": "JobHunt Autofill",
   "version": "0.1.0",
   "description": "Autofills job application forms from your local JobHunt backend. Never auto-submits.",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
   "host_permissions": [
     "http://localhost:8000/*",
     "https://*.myworkdayjobs.com/*",
     "https://boards.greenhouse.io/*",
+    "https://job-boards.greenhouse.io/*",
     "https://jobs.lever.co/*",
     "https://jobs.ashbyhq.com/*",
     "https://*.icims.com/*",
-    "https://*.smartrecruiters.com/*"
+    "https://*.smartrecruiters.com/*",
+    "https://www.naukri.com/*",
+    "https://*.foundit.in/*",
+    "https://wellfound.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -21,10 +25,14 @@
       "matches": [
         "https://*.myworkdayjobs.com/*",
         "https://boards.greenhouse.io/*",
+        "https://job-boards.greenhouse.io/*",
         "https://jobs.lever.co/*",
         "https://jobs.ashbyhq.com/*",
         "https://*.icims.com/*",
-        "https://*.smartrecruiters.com/*"
+        "https://*.smartrecruiters.com/*",
+        "https://www.naukri.com/*",
+        "https://*.foundit.in/*",
+        "https://wellfound.com/*"
       ],
       "js": ["content.js"],
       "run_at": "document_idle"

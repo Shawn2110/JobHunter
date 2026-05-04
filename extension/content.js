@@ -13,8 +13,127 @@
     if (host.includes("ashbyhq.com")) return "ashby";
     if (host.includes("icims.com")) return "icims";
     if (host.includes("smartrecruiters.com")) return "smartrecruiters";
+    if (host.includes("naukri.com")) return "naukri";
+    if (host.includes("foundit.in")) return "foundit";
+    if (host.includes("wellfound.com")) return "wellfound";
     return null;
   }
+
+  // ── JD extraction (read-only DOM access — your logged-in session) ──
+  //
+  // For each portal, try a stack of selectors. First match wins; if
+  // nothing matches, fall back to <h1> / <title> / page innerText.
+  // Selectors break when portals redesign — keep them grouped per
+  // portal so fixes are localized.
+
+  function firstText(selectors) {
+    for (const sel of selectors) {
+      const el = document.querySelector(sel);
+      const text = (el?.textContent || "").trim();
+      if (text) return text;
+    }
+    return "";
+  }
+
+  function firstInnerText(selectors) {
+    for (const sel of selectors) {
+      const el = document.querySelector(sel);
+      const text = (el?.innerText || "").trim();
+      if (text && text.length > 50) return text;
+    }
+    return "";
+  }
+
+  const SELECTORS = {
+    naukri: {
+      title: ["h1.styles_jd-header-title__rZwM1", "h1[class*='jd-header']", "h1"],
+      company: [
+        ".styles_jd-header-comp-name__MvqAI",
+        "[class*='comp-name']",
+        "[data-test*='employer']",
+      ],
+      location: [".styles_jhc__location__W_OKu", "[class*='location']"],
+      description: [
+        ".styles_JDC__dang-inner-html__h0K4t",
+        "section[class*='JDC'] [class*='dang-inner']",
+        "section[class*='JD']",
+      ],
+    },
+    greenhouse: {
+      title: [".app-title", "h1.app-title", "h1"],
+      company: [".company-name", "h2.company-name"],
+      location: [".location"],
+      description: ["#content", ".job__description"],
+    },
+    lever: {
+      title: [".posting-headline h2", "h2"],
+      company: [".main-header-text h1", "h1.main-header-text"],
+      location: [".location"],
+      description: [".posting-page section.section", ".section-page"],
+    },
+    ashby: {
+      title: ["h1"],
+      company: ["[class*='company-name']", "h2"],
+      location: ["[class*='location']"],
+      description: ["main", "[class*='description']"],
+    },
+    foundit: {
+      title: ["h1", "[class*='jd-title']"],
+      company: ["[class*='comp-name']", "[class*='company']"],
+      location: ["[class*='location']"],
+      description: ["[class*='description']", "section"],
+    },
+    wellfound: {
+      title: ["h1", "h2"],
+      company: ["[class*='company-name']", "h2 a"],
+      location: ["[class*='location']"],
+      description: ["[class*='description']", "main"],
+    },
+    workday: {
+      title: ["[data-automation-id='jobPostingHeader']", "h2", "h1"],
+      company: ["[data-automation-id='jobPostingCompany']"],
+      location: ["[data-automation-id='locations']"],
+      description: ["[data-automation-id='jobPostingDescription']"],
+    },
+  };
+
+  function extractJobFromPage() {
+    const family = detectAtsFamily();
+    const sels = (family && SELECTORS[family]) || {};
+
+    // Generic fallback selectors layered after portal-specific ones
+    const titleSels = [...(sels.title || []), "h1", "title"];
+    const companySels = [...(sels.company || []), "[class*='company']"];
+    const locationSels = [...(sels.location || []), "[class*='location']"];
+    const descSels = [...(sels.description || []), "main", "article"];
+
+    const title = firstText(titleSels) || document.title || "(unknown)";
+    const company = firstText(companySels) || "(unknown)";
+    const locationText = firstText(locationSels) || null;
+    const description = firstInnerText(descSels);
+
+    return {
+      portal: family || "generic",
+      title,
+      company,
+      location: locationText,
+      description_md: description ? description.slice(0, 16000) : null,
+      apply_url: window.location.href,
+    };
+  }
+
+  // Make available to popup via chrome.tabs.sendMessage
+  chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg?.type === "extract_job_from_page") {
+      try {
+        sendResponse({ ok: true, payload: extractJobFromPage() });
+      } catch (err) {
+        sendResponse({ ok: false, error: String(err) });
+      }
+      return true;
+    }
+    return false;
+  });
 
   function findField(labels) {
     // Match by associated label text or aria-label or placeholder.

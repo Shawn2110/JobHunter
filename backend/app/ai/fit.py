@@ -59,6 +59,41 @@ async def _load_handle_signals(
     return {h.kind: h.last_signal_json for h in handles if h.last_signal_json}
 
 
+async def compute_fit_dict(
+    *,
+    profile_payload: dict[str, Any],
+    resume_json: dict[str, Any],
+    handle_signals: dict[str, Any],
+    job_payload: dict[str, Any],
+    claude: ClaudeClient,
+    loader: PromptLoader,
+    session: AsyncSession | None = None,
+) -> dict[str, Any]:
+    """Stateless fit assessment.
+
+    Renders the meta-prompt, calls Claude, validates output against
+    the manifest's schema, and returns the parsed dict. No DB writes.
+
+    Used by the extension's live-preview score endpoint where we
+    don't want to persist a FitAssessment for a job the user might
+    immediately close. `assess_fit` (below) is the persisting wrapper.
+    """
+    rendered = loader.render(
+        "meta",
+        "fit_assessment_brief",
+        {
+            "profile": profile_payload,
+            "resume_json": resume_json,
+            "handle_signals": handle_signals,
+            "job": job_payload,
+        },
+    )
+    parsed, _ = await claude.complete_json(
+        rendered, loader=loader, session=session
+    )
+    return parsed
+
+
 async def assess_fit(
     job: Job,
     profile: Profile,
@@ -74,18 +109,14 @@ async def assess_fit(
     previous assessment.
     """
     handle_signals = await _load_handle_signals(session, profile.id)
-    rendered = loader.render(
-        "meta",
-        "fit_assessment_brief",
-        {
-            "profile": _profile_payload(profile),
-            "resume_json": (resume.parsed_json if resume else {}),
-            "handle_signals": handle_signals,
-            "job": _job_payload(job),
-        },
-    )
-    parsed, _ = await claude.complete_json(
-        rendered, loader=loader, session=session
+    parsed = await compute_fit_dict(
+        profile_payload=_profile_payload(profile),
+        resume_json=(resume.parsed_json if resume else {}),
+        handle_signals=handle_signals,
+        job_payload=_job_payload(job),
+        claude=claude,
+        loader=loader,
+        session=session,
     )
 
     existing = (
@@ -120,3 +151,15 @@ async def assess_fit(
         verdict=assessment.verdict,
     )
     return assessment
+
+
+async def load_handle_signals(
+    session: AsyncSession, profile_id: int
+) -> dict[str, Any]:
+    """Public re-export of the handle-signals loader for stateless callers."""
+    return await _load_handle_signals(session, profile_id)
+
+
+def profile_payload(profile: Profile) -> dict[str, Any]:
+    """Public re-export — used by extension scoring."""
+    return _profile_payload(profile)

@@ -17,6 +17,61 @@ from app.trust.verdict import compose_verdict
 log = structlog.get_logger("app.trust.service")
 
 
+async def compute_trust_dict(
+    *,
+    job_title: str,
+    company: str,
+    description_md: str | None,
+    apply_url: str | None = None,
+    claude: ClaudeClient,
+    loader: PromptLoader,
+    session: AsyncSession | None = None,
+    locale: str = "global",
+    company_context: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Stateless trust assessment for live preview.
+
+    Runs Layer A (rules) + Layer B (AI) + verdict composer. **Skips
+    Layer C (longitudinal)** since the job isn't persisted yet — no
+    job_repost_history row to evaluate against and we don't want to
+    record a sighting for jobs the user might immediately close.
+
+    Returns a dict matching the TrustAssessment shape so the same
+    UI components can render either preview or persisted verdicts.
+    """
+    text = " ".join(filter(None, [job_title, description_md or ""]))
+    rule_hits = evaluate_text(text, locale=locale)  # type: ignore[arg-type]
+    static_score = static_check_score(rule_hits)
+
+    ai_result = await ai_trust_check(
+        job_title=job_title,
+        company=company,
+        job_description=description_md or "",
+        rule_hits=rule_hits,
+        company_context=company_context,
+        claude=claude,
+        loader=loader,
+        session=session,
+    )
+
+    composed = compose_verdict(
+        rule_hits=rule_hits,
+        ai_result=ai_result,
+        longitudinal_signals=[],  # Skipped — preview path
+    )
+
+    return {
+        "verdict": composed.verdict,
+        "scam_signals_json": composed.scam_signals,
+        "ghost_job_signals_json": composed.ghost_job_signals,
+        "positive_signals_json": composed.positive_signals,
+        "rationale_md": composed.rationale_md,
+        "static_check_score": static_score,
+        "ai_check_score": ai_result.get("ai_check_score"),
+        "longitudinal_score": None,
+    }
+
+
 async def assess_trust(
     job: Job,
     *,

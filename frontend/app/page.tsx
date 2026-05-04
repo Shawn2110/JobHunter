@@ -67,21 +67,60 @@ export default function HomePage() {
         )}
       </section>
 
-      <p className="text-xs text-neutral-400">
-        Set up your{" "}
-        <a href="/profile" className="underline hover:text-neutral-600">
-          profile
-        </a>{" "}
-        and run a{" "}
-        <a href="/search" className="underline hover:text-neutral-600">
-          search
-        </a>{" "}
-        to begin. Run{" "}
-        <code className="rounded bg-neutral-100 px-1">
-          python scripts/setup_ai.py
-        </code>{" "}
-        to add your Anthropic key.
-      </p>
+      <section className="space-y-3 rounded-lg border border-teal-200 bg-teal-50 p-5">
+        <h2 className="text-sm font-semibold text-teal-900">
+          Use the extension
+        </h2>
+        <p className="text-xs text-teal-900">
+          The extension is the main JobHunt surface. Browse jobs on
+          LinkedIn / Naukri / Indeed / Greenhouse / Lever / Ashby normally;
+          the JobHunt overlay scores fit + flags scams + offers Save &amp;
+          tailor on every job page you open.
+        </p>
+        <ol className="ml-4 list-decimal space-y-1 text-xs text-teal-900">
+          <li>
+            Visit <code className="rounded bg-white px-1">chrome://extensions</code>
+          </li>
+          <li>Enable Developer Mode (top-right toggle)</li>
+          <li>
+            Click <strong>Load unpacked</strong> and select the{" "}
+            <code className="rounded bg-white px-1">extension/</code> folder
+            in your JobHunt repo
+          </li>
+          <li>Open any job posting — the overlay appears top-right</li>
+        </ol>
+      </section>
+
+      <section className="space-y-2 rounded-lg border border-neutral-200 bg-white p-5">
+        <h2 className="text-sm font-semibold">This web app is for</h2>
+        <ul className="ml-4 list-disc space-y-1 text-xs text-neutral-700">
+          <li>
+            One-time setup at{" "}
+            <a href="/profile" className="underline hover:text-neutral-900">
+              /profile
+            </a>{" "}
+            (basics, handles, master resume upload)
+          </li>
+          <li>
+            Reviewing tailored packages saved from the extension at{" "}
+            <code className="rounded bg-neutral-100 px-1">/jobs/[id]/package</code>
+          </li>
+          <li>
+            Optional JobHunt-native discovery at{" "}
+            <a href="/search" className="underline hover:text-neutral-900">
+              /search
+            </a>{" "}
+            (Greenhouse / Lever / Ashby + Reddit)
+          </li>
+        </ul>
+        <p className="pt-2 text-[11px] text-neutral-400">
+          Need an Anthropic key? Run{" "}
+          <code className="rounded bg-neutral-100 px-1">
+            python scripts/setup_ai.py
+          </code>
+          .
+        </p>
+      </section>
     </main>
   );
 }

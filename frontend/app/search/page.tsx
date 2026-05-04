@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { searchJobs, type JobOut, type SearchInput } from "@/lib/api";
+import { EXTERNAL_PORTALS } from "@/lib/external_search";
 
 const EMPTY: SearchInput = {
   role: "",
@@ -127,6 +128,16 @@ export default function SearchPage() {
             (via watchlist URLs) plus Reddit hiring threads.
           </p>
         </form>
+
+        <ExternalSearchPanel
+          query={{
+            ...query,
+            locations: locationsRaw
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean),
+          }}
+        />
       </aside>
 
       {/* Right: results */}
@@ -157,6 +168,52 @@ export default function SearchPage() {
         </ul>
       </section>
     </main>
+  );
+}
+
+function ExternalSearchPanel({ query }: { query: SearchInput }) {
+  const enabled = query.role.trim().length > 0;
+  return (
+    <aside className="space-y-3 rounded-lg border border-neutral-200 bg-white p-5">
+      <div>
+        <h2 className="text-sm font-medium">Search elsewhere</h2>
+        <p className="mt-0.5 text-[11px] text-neutral-500">
+          Opens each portal&apos;s native search in a new tab. Your
+          browser, your session.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {EXTERNAL_PORTALS.map((portal) => (
+          <a
+            key={portal.id}
+            href={enabled ? portal.buildUrl(query) : undefined}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-disabled={!enabled}
+            className={`block rounded-md border px-3 py-2 text-xs transition-colors ${
+              enabled
+                ? "border-neutral-200 hover:border-teal-700 hover:bg-teal-50"
+                : "pointer-events-none border-neutral-100 opacity-50"
+            }`}
+            title={portal.description}
+          >
+            <span className="block font-medium text-neutral-900">
+              {portal.label} ↗
+            </span>
+            <span className="text-[10px] text-neutral-500">
+              {portal.description}
+            </span>
+          </a>
+        ))}
+      </div>
+
+      {!enabled && (
+        <p className="text-[11px] text-neutral-400">
+          Type a role above to enable.
+        </p>
+      )}
+    </aside>
   );
 }
 

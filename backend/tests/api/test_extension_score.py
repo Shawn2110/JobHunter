@@ -163,18 +163,43 @@ async def test_score_does_not_persist_anything(
 async def test_save_and_tailor_persists_and_returns_package_url(
     api_client: AsyncClient,
     db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """When profile + resume + anthropic key are present, save kicks
+    off background tailoring and the package URL carries the ?gen=1
+    hint so the frontend knows to poll."""
     db_session.add(Profile(name="U"))
     db_session.add(Resume(version=1, is_master=True, parsed_json={"name": "U"}))
     await db_session.commit()
+
+    # Stub anthropic_api_key on settings so the endpoint kicks off
+    # tailoring rather than skipping. Stub asyncio.create_task to
+    # avoid a real background coroutine running on the test loop.
+    from app.config import settings
+    monkeypatch.setattr(settings, "anthropic_api_key", "sk-test")
+
+    import app.api.extension as ext_mod
+    scheduled: list[Any] = []
+
+    def fake_create_task(coro):
+        # Close the coroutine so it doesn't warn about not being awaited
+        coro.close()
+        scheduled.append(True)
+
+        class _DummyTask:
+            pass
+        return _DummyTask()
+
+    monkeypatch.setattr(ext_mod.asyncio, "create_task", fake_create_task)
 
     res = await api_client.post("/extension/save-and-tailor", json=_BASE_PAYLOAD)
     assert res.status_code == 200, res.text
     body = res.json()
     assert body["job_id"] > 0
-    assert body["package_url"].endswith(f"/jobs/{body['job_id']}/package")
+    assert body["package_url"].endswith(f"/jobs/{body['job_id']}/package?gen=1")
     assert body["duplicate"] is False
     assert body["tailoring_status"] == "kicked_off"
+    assert len(scheduled) == 1, "background tailoring task should have been scheduled"
 
 
 @pytest.mark.asyncio
@@ -186,6 +211,7 @@ async def test_save_and_tailor_dedups_on_apply_url(
     second = await api_client.post("/extension/save-and-tailor", json=_BASE_PAYLOAD)
     assert first.json()["job_id"] == second.json()["job_id"]
     assert second.json()["duplicate"] is True
+    assert second.json()["tailoring_status"] == "skipped_duplicate"
 
 
 @pytest.mark.asyncio
@@ -207,3 +233,23 @@ async def test_save_and_tailor_warns_when_no_resume(
     res = await api_client.post("/extension/save-and-tailor", json=_BASE_PAYLOAD)
     body = res.json()
     assert body["tailoring_status"] == "skipped_no_resume"
+
+
+@pytest.mark.asyncio
+async def test_save_and_tailor_warns_when_no_anthropic_key(
+    api_client: AsyncClient,
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Profile + resume present but no Anthropic key → don't kick off
+    tailoring (it would hang on the first Claude call)."""
+    db_session.add(Profile(name="U"))
+    db_session.add(Resume(version=1, is_master=True, parsed_json={"name": "U"}))
+    await db_session.commit()
+
+    from app.config import settings
+    monkeypatch.setattr(settings, "anthropic_api_key", None)
+
+    res = await api_client.post("/extension/save-and-tailor", json=_BASE_PAYLOAD)
+    assert res.status_code == 200
+    assert res.json()["tailoring_status"] == "skipped_no_anthropic_key"

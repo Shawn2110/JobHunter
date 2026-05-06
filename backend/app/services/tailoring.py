@@ -149,6 +149,7 @@ async def execute_tailoring(
         raise TailoringError("Layer-2 produced no output")
 
     artifact = TailoredArtifact(
+        job_id=job.id,
         brief_id=brief.id,
         kind="resume",
         content_json=output,

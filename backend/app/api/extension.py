@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 from typing import Annotated, Any
 
@@ -17,6 +18,7 @@ from app.deps import get_claude, get_prompt_loader
 from app.discovery.dedupe import canonical_company
 from app.models import Job, JobSource, Profile, Resume
 from app.trust.service import compute_trust_dict
+from app.workers.background_tailor import tailor_job_in_background
 
 router = APIRouter(prefix="/extension", tags=["extension"])
 
@@ -328,11 +330,14 @@ async def save_and_tailor(
             )
         )
         await session.commit()
+        # Don't re-fire tailoring on duplicates — the artifacts (or
+        # in-flight task from the first save) already exist. User can
+        # regenerate from the package page if they want.
         return {
             "job_id": existing.id,
             "package_url": f"http://localhost:3000/jobs/{existing.id}/package",
             "duplicate": True,
-            "tailoring_status": "kicked_off",
+            "tailoring_status": "skipped_duplicate",
         }
 
     job = Job(
@@ -357,7 +362,9 @@ async def save_and_tailor(
     await session.commit()
 
     # Tailoring readiness check — surface in the response so the
-    # extension can warn the user before they click through.
+    # extension can warn the user before they click through. When all
+    # prereqs are present, kick off background tailoring so the
+    # package page loads with everything ready.
     profile = (await session.execute(select(Profile).limit(1))).scalar_one_or_none()
     resume = (
         await session.execute(
@@ -368,12 +375,27 @@ async def save_and_tailor(
         status_str = "skipped_no_profile"
     elif resume is None:
         status_str = "skipped_no_resume"
+    elif not settings_anthropic_key_configured():
+        status_str = "skipped_no_anthropic_key"
     else:
+        # Fire-and-forget. The task opens its own SessionLocal — the
+        # request session has already closed by the time it runs. We
+        # explicitly don't await this; the response returns immediately
+        # so the extension overlay can show 'Open package' without a
+        # 60-second wait.
+        asyncio.create_task(tailor_job_in_background(job.id))
         status_str = "kicked_off"
 
     return {
         "job_id": job.id,
-        "package_url": f"http://localhost:3000/jobs/{job.id}/package",
+        "package_url": f"http://localhost:3000/jobs/{job.id}/package?gen=1",
         "duplicate": False,
         "tailoring_status": status_str,
     }
+
+
+def settings_anthropic_key_configured() -> bool:
+    """Module-level check so we don't have to import settings inline
+    in the endpoint body."""
+    from app.config import settings
+    return bool(settings.anthropic_api_key)

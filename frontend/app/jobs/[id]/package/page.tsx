@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, use, useCallback, useEffect, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,11 +29,31 @@ export default function PackagePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto max-w-4xl px-6 py-8">
+          <p className="text-sm text-neutral-500">Loading…</p>
+        </main>
+      }
+    >
+      <PackagePageInner params={params} />
+    </Suspense>
+  );
+}
+
+function PackagePageInner({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
   const jobId = Number(id);
+  const searchParams = useSearchParams();
+  const isGenerating = searchParams.get("gen") === "1";
 
   const [job, setJob] = useState<JobOut | null>(null);
-  const [artifacts, setArtifacts] = useState<ArtifactOut[]>([]);
+  const [, setArtifacts] = useState<ArtifactOut[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +68,11 @@ export default function PackagePage({
   const [customAnswers, setCustomAnswers] = useState<CustomAnswerOut[]>([]);
   const [customState, setCustomState] = useState<AsyncState>({ kind: "idle" });
 
-  const refresh = useCallback(async () => {
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollDeadlineRef = useRef<number | null>(null);
+
+  const refresh = useCallback(async (): Promise<Set<string>> => {
+    const kinds = new Set<string>();
     try {
       const [j, arts] = await Promise.all([
         getJobDetail(jobId),
@@ -55,29 +80,89 @@ export default function PackagePage({
       ]);
       setJob(j);
       setArtifacts(arts);
-      // Pull existing artifacts into the per-section slots
       const resume = arts.find((a) => a.kind === "resume");
-      if (resume) setResumeArtifact(resume);
+      if (resume) {
+        setResumeArtifact(resume);
+        setResumeState({ kind: "ok" });
+        kinds.add("resume");
+      }
       const cover = arts.find((a) => a.kind === "cover_letter");
       if (cover) {
         setCoverArtifact(cover);
-        // brief is referenced by cover.brief_id but we'd need a separate
-        // fetch to load it; skip for v1 — the artifact has the body
+        setCoverState({ kind: "ok" });
+        kinds.add("cover_letter");
       }
       const ca = arts.find((a) => a.kind === "custom_answers");
       if (ca && ca.content_json && Array.isArray(ca.content_json["answers"])) {
         setCustomAnswers(ca.content_json["answers"] as CustomAnswerOut[]);
+        setCustomState({ kind: "ok" });
+        kinds.add("custom_answers");
       }
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setLoading(false);
     }
+    return kinds;
   }, [jobId]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  // When ?gen=1 is set, the extension just kicked off background tailoring.
+  // Mark each empty section as "running" up-front and poll until all three
+  // artifact kinds arrive (or we hit the 120s deadline).
+  useEffect(() => {
+    if (!isGenerating) return;
+    pollDeadlineRef.current = Date.now() + 120_000;
+
+    setResumeState((s) => (s.kind === "idle" ? { kind: "running" } : s));
+    setCoverState((s) => (s.kind === "idle" ? { kind: "running" } : s));
+    setCustomState((s) => (s.kind === "idle" ? { kind: "running" } : s));
+
+    const tick = async () => {
+      const kinds = await refresh();
+      const allDone =
+        kinds.has("resume") &&
+        kinds.has("cover_letter") &&
+        kinds.has("custom_answers");
+      const timedOut =
+        pollDeadlineRef.current !== null &&
+        Date.now() >= pollDeadlineRef.current;
+      if (allDone || timedOut) {
+        if (pollTimerRef.current) {
+          clearInterval(pollTimerRef.current);
+          pollTimerRef.current = null;
+        }
+        if (timedOut && !allDone) {
+          setResumeState((s) =>
+            s.kind === "running"
+              ? { kind: "error", message: "Background tailoring timed out — try Regenerate." }
+              : s,
+          );
+          setCoverState((s) =>
+            s.kind === "running"
+              ? { kind: "error", message: "Background tailoring timed out — try Regenerate." }
+              : s,
+          );
+          setCustomState((s) =>
+            s.kind === "running"
+              ? { kind: "error", message: "Background tailoring timed out — try Regenerate." }
+              : s,
+          );
+        }
+      }
+    };
+
+    pollTimerRef.current = setInterval(() => void tick(), 5_000);
+    return () => {
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
+    };
+  }, [isGenerating, refresh]);
 
   // ── Resume tailoring (two-step: brief → execute) ──────────────────────
 

@@ -71,14 +71,22 @@ async def application_package(
 
     profile_payload: dict[str, Any] | None = None
     if profile:
-        # Pull email/phone/links off the parsed resume since profile
-        # itself doesn't store them.
+        # Pull contact + current-employment off the parsed resume since
+        # Profile itself doesn't store them. current_title / current_company
+        # come from experience[0] (the resume parser orders most-recent
+        # first) and let the autofill bar populate "Current employer" /
+        # "Current title" fields on application forms.
         parsed = (resume.parsed_json if resume else {}) or {}
+        experience = parsed.get("experience") or []
+        current = experience[0] if experience and isinstance(experience[0], dict) else {}
         profile_payload = {
             "name": profile.name,
             "email": parsed.get("email"),
             "phone": parsed.get("phone"),
+            "location": parsed.get("location"),
             "links": parsed.get("links") or [],
+            "current_title": current.get("title"),
+            "current_company": current.get("company"),
         }
 
     resume_summary: dict[str, Any] | None = None

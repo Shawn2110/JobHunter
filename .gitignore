@@ -51,6 +51,7 @@ yarn-error.log*
 # ─── Browser extension build ─────────────────────────────
 extension/dist/
 extension/*.zip
+# Published extension zips live in release/ (checked in, see README).
 
 # ─── Editors / IDEs ──────────────────────────────────────
 .vscode/

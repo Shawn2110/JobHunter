@@ -135,26 +135,60 @@
     return false;
   });
 
-  function findField(labels) {
-    // Match by associated label text or aria-label or placeholder.
-    const inputs = Array.from(
-      document.querySelectorAll("input, textarea, select")
-    );
-    for (const el of inputs) {
-      const labelText = (
-        (el.labels && el.labels[0] && el.labels[0].textContent) ||
-        el.getAttribute("aria-label") ||
-        el.getAttribute("placeholder") ||
-        el.getAttribute("name") ||
-        ""
-      )
-        .toLowerCase()
-        .trim();
-      for (const candidate of labels) {
-        if (labelText.includes(candidate)) return el;
+  // Resolve an input's effective label text from every place forms put
+  // it: <label for>, aria-label, aria-labelledby pointing at one or
+  // more elements, placeholder, name, id. Returned text is lowercase
+  // and whitespace-collapsed.
+  function fieldLabelText(el) {
+    const parts = [];
+    if (el.labels && el.labels.length) {
+      for (const l of el.labels) parts.push(l.textContent || "");
+    }
+    parts.push(el.getAttribute("aria-label") || "");
+    const labelledBy = el.getAttribute("aria-labelledby");
+    if (labelledBy) {
+      for (const id of labelledBy.split(/\s+/)) {
+        const ref = id && document.getElementById(id);
+        if (ref) parts.push(ref.textContent || "");
       }
     }
-    return null;
+    parts.push(el.getAttribute("placeholder") || "");
+    parts.push(el.getAttribute("name") || "");
+    parts.push(el.getAttribute("id") || "");
+    return parts.join(" ").replace(/\s+/g, " ").toLowerCase().trim();
+  }
+
+  function isFillable(el) {
+    if (!el || el.disabled || el.readOnly) return false;
+    const type = (el.getAttribute("type") || "").toLowerCase();
+    if (["hidden", "submit", "button", "file", "checkbox", "radio"].includes(type)) {
+      return false;
+    }
+    // Skip elements that are visually hidden — most ATS use display:none
+    // for stale duplicate inputs. We don't want to fill those.
+    const cs = window.getComputedStyle(el);
+    if (cs.display === "none" || cs.visibility === "hidden") return false;
+    return true;
+  }
+
+  // Find the best matching input for a list of candidate label
+  // substrings. Prefers untouched fields, falls back to any match
+  // (so re-clicking Autofill still works after typing). Pass a
+  // pre-filtered `candidates` list (e.g. only <textarea>s) to scope
+  // the search.
+  function findField(labels, candidates) {
+    const els = candidates || Array.from(
+      document.querySelectorAll("input, textarea, select")
+    );
+    let fallback = null;
+    for (const el of els) {
+      if (!isFillable(el)) continue;
+      const txt = fieldLabelText(el);
+      if (!labels.some((c) => txt.includes(c))) continue;
+      if (!el.value) return el;
+      if (!fallback) fallback = el;
+    }
+    return fallback;
   }
 
   function setValue(el, value) {
@@ -169,73 +203,200 @@
     el.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  function autofill(pkg) {
-    if (!pkg || !pkg.profile) return { filled: 0 };
-    const p = pkg.profile;
-    const fields = [
-      [["first name", "firstname", "given name"], (p.name || "").split(" ")[0]],
-      [["last name", "lastname", "surname", "family name"], (p.name || "").split(" ").slice(1).join(" ")],
-      [["full name"], p.name],
-      [["email"], p.email],
-      [["phone", "mobile"], p.phone],
-      [["linkedin"], (p.links || []).find((l) => l.kind === "linkedin")?.url ?? ""],
-      [["github"], (p.links || []).find((l) => l.kind === "github")?.url ?? ""],
-      [["portfolio", "website"], (p.links || []).find((l) => l.kind === "portfolio")?.url ?? ""],
-    ];
-    let filled = 0;
-    for (const [labels, value] of fields) {
-      if (!value) continue;
-      const el = findField(labels);
-      if (el) {
-        setValue(el, value);
-        filled += 1;
-      }
-    }
-    return { filled };
+  // Inject the highlight keyframe once — the autofill bar uses it to
+  // briefly outline filled fields so the user can spot them.
+  function ensureHighlightStyle() {
+    if (document.getElementById("jobhunt-highlight-style")) return;
+    const s = document.createElement("style");
+    s.id = "jobhunt-highlight-style";
+    s.textContent =
+      "@keyframes jh-flash{" +
+      "0%{box-shadow:0 0 0 0 rgba(15,118,110,.0)}" +
+      "30%{box-shadow:0 0 0 4px rgba(15,118,110,.45)}" +
+      "100%{box-shadow:0 0 0 0 rgba(15,118,110,0)}}" +
+      ".jh-filled{animation:jh-flash 1.4s ease-out 1}";
+    document.head.appendChild(s);
   }
 
-  // ── Inject a tiny floating action bar ───────────────────────────────
+  function flashField(el) {
+    ensureHighlightStyle();
+    el.classList.add("jh-filled");
+    setTimeout(() => el.classList.remove("jh-filled"), 1500);
+  }
+
+  function autofill(pkg) {
+    if (!pkg || !pkg.profile) return { filled: [], skipped: [] };
+    const p = pkg.profile;
+    const summary = pkg.resume_summary?.summary || null;
+    const linkBy = (kind) =>
+      (p.links || []).find((l) => l.kind === kind)?.url || "";
+    const firstName = (p.name || "").split(" ")[0];
+    const lastName = (p.name || "").split(" ").slice(1).join(" ");
+
+    // Each entry: { name (display), labels (match candidates), value }
+    const fields = [
+      { name: "First name",   labels: ["first name", "firstname", "given name"], value: firstName },
+      { name: "Last name",    labels: ["last name", "lastname", "surname", "family name"], value: lastName },
+      { name: "Full name",    labels: ["full name", "your name"], value: p.name },
+      { name: "Email",        labels: ["email"], value: p.email },
+      { name: "Phone",        labels: ["phone", "mobile", "contact number"], value: p.phone },
+      { name: "Location",     labels: ["location", "city", "address"], value: p.location },
+      { name: "LinkedIn",     labels: ["linkedin"], value: linkBy("linkedin") },
+      { name: "GitHub",       labels: ["github"], value: linkBy("github") },
+      { name: "Portfolio",    labels: ["portfolio", "personal website", "website"], value: linkBy("portfolio") },
+      { name: "Current title",   labels: ["current title", "current role", "job title", "current position"], value: p.current_title },
+      { name: "Current employer", labels: ["current employer", "current company", "company name"], value: p.current_company },
+      // Only fill the summary into a textarea labelled "about you" /
+      // "tell us about yourself". A cover-letter textarea should be
+      // tailored per-job, not generic — leave those alone.
+      { name: "Summary",      labels: ["about you", "tell us about yourself", "professional summary", "bio"], value: summary, textareaOnly: true },
+    ];
+
+    const filled = [];
+    const skipped = [];
+    for (const f of fields) {
+      if (!f.value) { skipped.push({ name: f.name, reason: "no value" }); continue; }
+      const candidates = f.textareaOnly
+        ? Array.from(document.querySelectorAll("textarea"))
+        : undefined;
+      const el = findField(f.labels, candidates);
+      if (!el) { skipped.push({ name: f.name, reason: "no match" }); continue; }
+      const original = el.value;
+      setValue(el, f.value);
+      flashField(el);
+      filled.push({ name: f.name, value: f.value, el, original });
+    }
+    return { filled, skipped };
+  }
+
+  // ── Inject the floating action bar (Save + Autofill + status) ──────
   function mountActionBar() {
     if (document.getElementById("jobhunt-bar")) return;
     const family = detectAtsFamily();
     if (!family) return;
 
+    let lastFill = null;  // { filled: [...], skipped: [...] } — for undo + status pane
+
     const bar = document.createElement("div");
     bar.id = "jobhunt-bar";
     bar.style.cssText =
       "position:fixed;bottom:16px;right:16px;z-index:2147483647;" +
-      "background:#0f766e;color:#fff;padding:10px 14px;border-radius:8px;" +
-      "font:12px system-ui;box-shadow:0 6px 16px rgba(0,0,0,.18);" +
-      "display:flex;gap:8px;align-items:center";
+      "background:#0f766e;color:#fff;padding:10px 12px;border-radius:8px;" +
+      "font:12px/1.35 system-ui;box-shadow:0 6px 16px rgba(0,0,0,.18);" +
+      "display:flex;flex-direction:column;gap:6px;max-width:340px";
+
+    const headerRow = document.createElement("div");
+    headerRow.style.cssText = "display:flex;gap:8px;align-items:center";
 
     const label = document.createElement("span");
+    label.style.cssText = "font-weight:600";
     label.textContent = "JobHunt · " + family;
-    bar.appendChild(label);
+    headerRow.appendChild(label);
 
-    const btn = document.createElement("button");
-    btn.textContent = "Autofill";
-    btn.style.cssText =
+    const note = document.createElement("span");
+    note.textContent = "never auto-submits";
+    note.style.cssText = "opacity:.75;font-size:11px;margin-left:auto";
+    headerRow.appendChild(note);
+
+    bar.appendChild(headerRow);
+
+    const buttonRow = document.createElement("div");
+    buttonRow.style.cssText = "display:flex;gap:6px";
+
+    const fillBtn = document.createElement("button");
+    fillBtn.textContent = "Autofill";
+    fillBtn.style.cssText =
       "background:#fff;color:#0f766e;border:0;padding:6px 10px;" +
-      "border-radius:6px;font-weight:600;cursor:pointer;font:12px system-ui";
-    btn.addEventListener("click", () => {
+      "border-radius:6px;font-weight:600;cursor:pointer;font:12px system-ui;flex:1";
+
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = "Save job";
+    saveBtn.style.cssText =
+      "background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.45);" +
+      "padding:6px 10px;border-radius:6px;font-weight:600;cursor:pointer;font:12px system-ui;flex:1";
+
+    buttonRow.appendChild(fillBtn);
+    buttonRow.appendChild(saveBtn);
+    bar.appendChild(buttonRow);
+
+    const status = document.createElement("div");
+    status.style.cssText =
+      "font-size:11px;color:#e6fffa;min-height:0;display:none";
+    bar.appendChild(status);
+
+    function showStatus(html) {
+      status.style.display = "block";
+      status.innerHTML = html;
+    }
+
+    // Undo button only renders inside the status pane after a fill.
+    function renderFillStatus(result) {
+      const { filled } = result;
+      if (filled.length === 0) {
+        showStatus("No matching fields found on this page.");
+        return;
+      }
+      const list = filled.map((f) => `· ${f.name}`).join("<br>");
+      showStatus(
+        `<div><b>Filled ${filled.length}</b> field${filled.length === 1 ? "" : "s"} — review then submit</div>` +
+        `<details style="margin-top:4px"><summary style="cursor:pointer;opacity:.85">Show fields</summary>` +
+        `<div style="margin-top:4px">${list}</div></details>` +
+        `<button id="jh-undo" style="margin-top:6px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);padding:3px 8px;border-radius:4px;cursor:pointer;font:11px system-ui">Undo fill</button>`
+      );
+      const undo = status.querySelector("#jh-undo");
+      if (undo) undo.addEventListener("click", () => {
+        for (const f of filled) {
+          try { setValue(f.el, f.original); } catch { /* element may have unmounted */ }
+        }
+        showStatus("Undone — fields restored.");
+        lastFill = null;
+      });
+    }
+
+    fillBtn.addEventListener("click", () => {
+      showStatus("Fetching profile…");
       chrome.runtime.sendMessage(
         { type: "fetch_application_package", url: location.href },
         (res) => {
           if (!res?.ok) {
-            label.textContent = "JobHunt · " + (res?.error ?? "error");
+            showStatus(`Error: ${res?.error ?? "unknown"}`);
             return;
           }
-          const r = autofill(res.package);
-          label.textContent = `JobHunt · ${r.filled} field(s) filled — review then submit`;
+          if (!res.package?.profile) {
+            showStatus("Profile not set up yet — open JobHunt and add one.");
+            return;
+          }
+          const result = autofill(res.package);
+          lastFill = result;
+          renderFillStatus(result);
         }
       );
     });
-    bar.appendChild(btn);
 
-    const note = document.createElement("span");
-    note.textContent = "(never auto-submits)";
-    note.style.cssText = "opacity:.75";
-    bar.appendChild(note);
+    saveBtn.addEventListener("click", () => {
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving…";
+      const payload = (typeof extractJobFromPage === "function")
+        ? extractJobFromPage()
+        : { apply_url: location.href, title: document.title, company: "(unknown)" };
+      chrome.runtime.sendMessage(
+        { type: "save_job_url", payload },
+        (res) => {
+          saveBtn.disabled = false;
+          if (res?.ok) {
+            saveBtn.textContent = res.job?.duplicate ? "Already saved" : "Saved ✓";
+            showStatus(
+              `Saved as job #${res.job?.id}. ` +
+              `<a href="http://localhost:3000/jobs/${res.job?.id}" target="_blank" style="color:#fff;text-decoration:underline">Open in JobHunt</a>`
+            );
+            setTimeout(() => { saveBtn.textContent = "Save job"; }, 3000);
+          } else {
+            saveBtn.textContent = "Save job";
+            showStatus(`Save failed: ${res?.error ?? "unknown"}`);
+          }
+        }
+      );
+    });
 
     document.body.appendChild(bar);
   }

@@ -41,19 +41,71 @@ For the full product scope and rationale, see [docs/PRD.md](docs/PRD.md).
 
 ## Status
 
-Pre-flight (Phase 0). See [docs/Plan.md § 2](docs/Plan.md) for the active task.
+Active development. Current focus: v1 extension features (autofill +
+rich save). v2 surfaces (in-page scoring overlay, background tailor)
+are wired up and tested, but not the priority. Architecture notes in
+[docs/decisions/0007-v2-wave-1-extension-primary.md](docs/decisions/0007-v2-wave-1-extension-primary.md).
 
-## Getting started
+## Install the browser extension
 
-> The project is currently being scaffolded. Setup instructions land with
-> Phase 10's [docs/SETUP.md](docs/Plan.md). Until then, the short version is:
+The extension runs alongside any supported job board (Greenhouse, Lever,
+Ashby, Workday, iCIMS, SmartRecruiters, Naukri, Foundit, Wellfound) and
+gives you:
+
+- **One-click save** of the current job posting via the toolbar popup
+- **Autofill** for application forms (name, email, phone, links,
+  summary) — pulled from your local profile + master resume
+- **In-page score overlay** with fit / trust / knockouts (optional, v2)
+
+The extension never auto-submits. It only talks to your local backend
+on `http://localhost:8000`.
+
+**Download:**
+[`release/jobhunt-extension-0.1.0.zip`](release/jobhunt-extension-0.1.0.zip)
+([raw](https://github.com/Shawn2110/JobHunter/raw/main/release/jobhunt-extension-0.1.0.zip))
+
+**Load it into Chrome / Edge / Brave:**
+
+1. Download the zip above and extract it to any folder.
+2. Open `chrome://extensions` (or `edge://extensions`, `brave://extensions`).
+3. Toggle **Developer mode** on (top-right).
+4. Click **Load unpacked** and select the extracted folder.
+5. Make sure the JobHunt backend is running on `http://localhost:8000`
+   (see *Run the backend* below). The extension only talks to your local
+   machine — no data leaves your laptop.
+
+> The zip is built straight from `extension/` in this repo — if you'd
+> rather not download, you can `Load unpacked` directly from
+> `extension/` after cloning. To rebuild the zip yourself:
+> `python scripts/build_extension.py`.
+
+## Run the backend
 
 ```bash
 git clone https://github.com/Shawn2110/JobHunter.git
 cd JobHunter
 cp .env.example .env
-# Fill in only the keys for the providers you want to use.
+# Optional: add ANTHROPIC_API_KEY to .env to enable AI tailoring.
+# Without it, save-and-tailor still saves jobs but skips generation.
 docker compose up
+```
+
+Or, for local development without Docker:
+
+```bash
+cd backend
+python -m venv .venv && . .venv/Scripts/activate    # Windows: .\.venv\Scripts\activate
+pip install -e .
+alembic upgrade head
+uvicorn app.main:app --reload
+```
+
+The web app (optional review canvas) lives in `frontend/`:
+
+```bash
+cd frontend
+npm install
+npm run dev   # http://localhost:3000
 ```
 
 ## License
